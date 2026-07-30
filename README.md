@@ -2,7 +2,8 @@
 
 # 🏛️ `hera`
 
-<img src="https://github.com/user-attachments/assets/84f447a9-e611-4127-9377-82d0b0881b0a" alt="hera logo" width="120" />
+<img width="277" height="430" alt="image" src="https://github.com/user-attachments/assets/7b5a41e3-5986-485d-a746-7a7e2b2a5f38" />
+
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
 
