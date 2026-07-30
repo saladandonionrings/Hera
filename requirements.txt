@@ -1,0 +1,26 @@
+# Backend Web
+Flask
+streamlit
+# Requêtes HTTP et Affichage (Originales)
+requests
+colorama
+curl_cffi
+beautifulsoup4
+
+# Gestion des variables d'environnement
+python-dotenv
+
+# Dépendances Google API (Module Google People)
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+# Outils OSINT externes
+ghunt
+holehe
+phonenumbers
+telethon
+
+# API externes
+TikTokApi
+playwright

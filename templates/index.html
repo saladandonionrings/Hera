@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hera — digital footprint intelligence by email, username or phone number.">
+    <meta name="theme-color" content="#0c0814">
+    <title>Hera — Web OSINT</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23140b1f'/%3E%3Crect x='7' y='7' width='86' height='86' rx='16' fill='%2314b8a6'/%3E%3Ctext x='50' y='68' font-size='50' font-family='Georgia,serif' font-weight='800' fill='%23fbbf24' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            color-scheme: dark;
+            --accent: 45, 212, 191;
+            --gold: 251, 191, 36;
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: #4c3a63 transparent; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #4c3a63; border-radius: 999px; }
+        ::selection { background: rgba(45, 212, 191, .35); color: #fff; }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background: #0c0814;
+            color: #e4e4e7;
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            position: relative;
+        }
+        /* Soft ambient depth behind the whole page - fixed so it never moves or repaints on scroll/re-render.
+           Royal purple + peacock teal + a whisper of gold, echoing Hera's iconography without leaning on clichés. */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(60rem 34rem at 50% -10%, rgba(124, 58, 237, .17), transparent 60%),
+                radial-gradient(46rem 30rem at 92% 6%, rgba(20, 184, 166, .10), transparent 55%),
+                radial-gradient(38rem 26rem at 4% 20%, rgba(251, 191, 36, .045), transparent 60%),
+                #0c0814;
+            pointer-events: none;
+        }
+        .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .font-display { font-family: 'Cinzel', ui-serif, Georgia, serif; }
+
+        /* Brand medallion - a coin/seal treatment (teal enamel, gold rim) standing in for
+           a plain logo square, used once in the header. */
+        .medallion {
+            background: radial-gradient(circle at 32% 28%, #2dd4bf, #0f766e 70%);
+            border: 1.5px solid rgba(251, 191, 36, .55);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, .10), inset 0 1px 1px rgba(255,255,255,.3);
+        }
+
+        /* A restrained Greek-key (meander) hairline - used sparingly as a single
+           divider, never as a repeating background texture across the page. */
+        .meander {
+            height: 13px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='13' viewBox='0 0 21 13'%3E%3Cpath d='M0.5 12.5 V2.5 H8.5 V8.5 H16.5 V0.5' fill='none' stroke='%23d4af37' stroke-width='1.3' stroke-linecap='square'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-position: center;
+            background-size: 21px 13px;
+            opacity: .3;
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp .45s cubic-bezier(.16,1,.3,1) both; }
+
+        /* Entrance for individually-inserted items (cards, chips) as results stream
+           in - each element gets this exactly once, on insertion, never on re-render,
+           so already-visible results are never disturbed by later updates. */
+        @keyframes revealIn {
+            0% { opacity: 0; transform: translateY(16px) scale(.97); }
+            65% { opacity: 1; }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .reveal-in { animation: revealIn .55s cubic-bezier(.16,1,.3,1) both; }
+
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 0 0 rgba(var(--accent), .5), 0 0 0 1px rgba(var(--accent), .4) inset; }
+            100% { box-shadow: 0 0 0 18px rgba(var(--accent), 0), 0 0 0 1px rgba(63, 63, 70, .6) inset; }
+        }
+        .glow-in { animation: glowPulse 1.4s cubic-bezier(.16,1,.3,1) both; }
+
+        @keyframes chipIn {
+            0% { opacity: 0; transform: translateY(6px) scale(.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .chip-in { animation: chipIn .4s cubic-bezier(.16,1,.3,1) both; }
+
+        @keyframes pulseOnce {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.14); color: rgb(129 140 248); }
+            100% { transform: scale(1); }
+        }
+        .pulse-once { animation: pulseOnce .5s cubic-bezier(.16,1,.3,1) both; }
+
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); } 40%, 60% { transform: translateX(4px); }
+        }
+        .shake { animation: shake .4s; }
+
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%) scaleX(.4); }
+            50% { transform: translateX(20%) scaleX(.6); }
+            100% { transform: translateX(120%) scaleX(.4); }
+        }
+        .progress-run { animation: indeterminate 1.2s ease-in-out infinite; }
+
+        @keyframes skeletonPulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+        .skeleton { animation: skeletonPulse 1.6s ease-in-out infinite; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.08), rgba(255,255,255,.04)); }
+
+        /* "Centered hero" -> "compact bar" transition on first search */
+        #hero-outer, #hero-brand, #search-form, #search-icon, #target, #search-btn {
+            transition: all .6s cubic-bezier(.16,1,.3,1);
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(38, 30, 48, .6), rgba(21, 16, 27, .6));
+            border: 1px solid rgba(130, 105, 160, .22);
+            box-shadow: 0 1px 0 0 rgba(255,255,255,.04) inset, 0 12px 24px -12px rgba(0,0,0,.55);
+            border-radius: 1.25rem;
+        }
+        .card-flat { background: #1b1522; border: 1px solid rgba(130, 105, 160, .25); border-radius: 1rem; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOP BAR ===== -->
+    <header class="sticky top-0 z-30 bg-[#0c0814]/90 backdrop-blur-md border-b border-[#3a2c4d]">
+        <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2.5">
+                <div class="medallion w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                    <span class="font-display font-bold text-amber-300 text-[14px]">H</span>
+                </div>
+                <span class="font-display font-semibold text-zinc-50 text-[18px] tracking-wide">Hera</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-3">
+                <span id="status" class="mono text-[11px] font-semibold hidden sm:flex items-center gap-2 text-zinc-600 mr-1">
+                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-700"></span>
+                    <span id="status-text">IDLE</span>
+                </span>
+                <button type="button" onclick="toggleGhuntDrawer()" title="Credentials (GHunt / Telegram)"
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-300 hover:bg-white/5 transition-colors">
+                    <i class="fa-solid fa-key text-sm"></i>
+                </button>
+                <button type="button" onclick="toggleLogsDrawer()" title="View raw output"
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-300 hover:bg-white/5 transition-colors">
+                    <i class="fa-solid fa-terminal text-sm"></i>
+                </button>
+            </div>
+        </div>
+        <div class="meander"></div>
+        <div class="h-[2px] bg-[#1c1526] overflow-hidden">
+            <div id="progress-bar" class="h-full w-1/3 bg-gradient-to-r from-teal-500 to-amber-400 opacity-0"></div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <div class="max-w-6xl mx-auto px-5 sm:px-8">
+
+        <!-- Search: large & centered on load, collapses into a compact bar on first scan -->
+        <div id="hero-outer" class="flex flex-col items-center justify-center text-center" style="min-height:56vh;">
+            <div id="hero-brand" class="mb-9" style="max-height:260px; overflow:hidden;">
+                <div class="medallion w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-fingerprint text-2xl text-white/90"></i>
+                </div>
+                <h1 class="font-display text-4xl sm:text-5xl font-semibold tracking-wide text-zinc-50">Investigate a digital footprint</h1>
+                <p class="text-zinc-500 mt-4 max-w-md mx-auto text-[15px] leading-relaxed">
+                    Search an email address, username or phone number across identity, social and breach-intelligence sources.
+                </p>
+            </div>
+
+            <form id="search-form" class="w-full max-w-2xl" autocomplete="off">
+                <div class="flex items-center gap-2 bg-[#15101d] border border-[#3a2c4d] rounded-2xl p-2.5 shadow-xl shadow-black/30 focus-within:border-teal-500/60 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all">
+                    <i id="search-icon" class="fa-solid fa-magnifying-glass text-zinc-600 pl-4 text-lg"></i>
+                    <input id="target" type="text" placeholder="name@domain.com, username or +33612345678" aria-label="Target to investigate: email, username or phone number"
+                           class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-lg px-3.5 py-3.5">
+                    <button id="search-btn" type="submit"
+                            class="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center gap-2.5 shrink-0 transition-all text-[15px] px-6 py-3.5 shadow-lg shadow-black/40 ring-1 ring-amber-400/25">
+                        <i id="search-btn-icon" class="fa-solid fa-arrow-right"></i>
+                        <span id="search-btn-label">Scan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="dashboard" class="hidden pb-16">
+
+            <!-- Target + at-a-glance stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 max-w-3xl mx-auto">
+                <div id="target-summary" class="col-span-2 sm:col-span-1 card p-4"></div>
+                <div id="stats-summary" class="contents"></div>
+            </div>
+
+            <!-- Export -->
+            <div id="export-bar" class="hidden max-w-3xl mx-auto mb-8 flex justify-end gap-2">
+                <button type="button" onclick="exportMarkdown()" title="Export as Markdown"
+                        class="bg-[#15101d] border border-[#3a2c4d] hover:border-teal-500/50 text-zinc-300 hover:text-teal-300 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                    <i class="fa-brands fa-markdown"></i> Markdown
+                </button>
+                <button type="button" onclick="exportPdf()" title="Export as PDF"
+                        class="bg-[#15101d] border border-[#3a2c4d] hover:border-amber-500/50 text-zinc-300 hover:text-amber-300 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </button>
+            </div>
+
+            <!-- Results - fixed, ordered slots so cards are only ever appended into the
+                 right place as they're discovered, never wiped/rebuilt on each update. -->
+            <main class="space-y-5 max-w-3xl mx-auto" aria-live="polite">
+                <div id="slot-loading"></div>
+                <div id="slot-google"></div>
+                <div id="slot-github"></div>
+                <div id="slot-modules" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                <div id="slot-chips"></div>
+                <div id="slot-hudson"></div>
+            </main>
+        </div>
+    </div>
+
+    <div class="meander max-w-xs mx-auto mb-5"></div>
+    <footer class="text-center mono text-[11px] text-zinc-700 pb-8 px-5">
+        Responsible use only — your own data, or with explicit authorization.
+    </footer>
+
+    <!-- ===== LOGS DRAWER ===== -->
+    <div id="logs-overlay" onclick="toggleLogsDrawer()" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity"></div>
+    <div id="logs-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[36rem] bg-[#0f0a17] border-l border-[#3a2c4d] z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-[#3a2c4d] shrink-0">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-terminal text-teal-400 text-sm"></i>
+                <span class="text-[15px] text-zinc-200 font-semibold">Raw output</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="copyLogs()" title="Copy" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-300 hover:bg-white/5 transition-colors">
+                    <i id="copy-icon" class="fa-regular fa-copy"></i>
+                </button>
+                <button type="button" onclick="toggleLogsDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        <pre id="raw-logs" class="mono flex-1 overflow-y-auto p-6 text-[13px] leading-relaxed text-zinc-400">Waiting...</pre>
+    </div>
+
+    <!-- ===== GHUNT AUTH DRAWER ===== -->
+    <div id="ghunt-overlay" onclick="toggleGhuntDrawer()" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity"></div>
+    <div id="ghunt-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[30rem] bg-[#0f0a17] border-l border-[#3a2c4d] z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-[#3a2c4d] shrink-0">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-key text-teal-400 text-sm"></i>
+                <span class="text-[15px] text-zinc-200 font-semibold">Credentials</span>
+            </div>
+            <button type="button" onclick="toggleGhuntDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-8">
+            <section class="space-y-5">
+                <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">GHunt (Google Identity)</h3>
+                <p class="text-[14px] text-zinc-400 leading-relaxed">
+                    The Google Identity module needs a GHunt session on the server. Install the
+                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-teal-300 hover:text-teal-200 hover:underline">GHunt Companion</a>
+                    browser extension, export your logged-in Google session as base64, then paste it below.
+                </p>
+                <textarea id="ghunt-cookies" rows="8" placeholder="Paste base64-encoded credentials here..."
+                          class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"></textarea>
+                <button type="button" id="ghunt-login-btn" onclick="submitGhuntLogin()"
+                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-amber-400/25">
+                    <i id="ghunt-login-icon" class="fa-solid fa-right-to-bracket"></i>
+                    <span id="ghunt-login-label">Authenticate</span>
+                </button>
+                <div id="ghunt-login-result" class="hidden text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border"></div>
+                <p class="text-[12px] text-zinc-600 leading-relaxed">
+                    This runs <code class="mono bg-white/5 px-1.5 py-0.5 rounded">ghunt login</code> directly on the server, replacing any existing session. Anyone with access to this page can trigger it — keep this deployment private.
+                </p>
+            </section>
+
+            <div class="border-t border-zinc-800"></div>
+
+            <section class="space-y-5">
+                <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">Telegram (Phone module)</h3>
+                <p class="text-[14px] text-zinc-400 leading-relaxed">
+                    Optional — enables the Telegram registration check on phone number scans. Create your own API app at
+                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-teal-300 hover:text-teal-200 hover:underline">my.telegram.org/apps</a>,
+                    then log in below — Hera saves the API ID/Hash to <code class="mono bg-white/5 px-1 py-0.5 rounded">.env</code> automatically, no manual step needed.
+                </p>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="tg-api-id" type="text" inputmode="numeric" placeholder="API ID"
+                           class="col-span-1 bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                    <input id="tg-api-hash" type="text" placeholder="API Hash"
+                           class="col-span-1 bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                </div>
+                <input id="tg-phone" type="tel" placeholder="Your phone number, e.g. +33612345678"
+                       class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
+
+                <button type="button" id="tg-send-code-btn" onclick="submitTelegramSendCode()"
+                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-amber-400/25">
+                    <i id="tg-send-code-icon" class="fa-solid fa-paper-plane"></i>
+                    <span id="tg-send-code-label">Send code</span>
+                </button>
+
+                <div id="tg-verify-block" class="hidden space-y-3">
+                    <input id="tg-code" type="text" inputmode="numeric" placeholder="Code received on Telegram"
+                           class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                    <input id="tg-password" type="password" placeholder="2FA password (only if asked)"
+                           class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                    <button type="button" id="tg-verify-btn" onclick="submitTelegramVerify()"
+                            class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-amber-400/25">
+                        <i id="tg-verify-icon" class="fa-solid fa-check"></i>
+                        <span id="tg-verify-label">Verify</span>
+                    </button>
+                </div>
+
+                <div id="tg-login-result" class="hidden text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border"></div>
+                <p class="text-[12px] text-zinc-600 leading-relaxed">
+                    This creates a Telegram user session on the server (via Telethon), saved as a <code class="mono bg-white/5 px-1 py-0.5 rounded">.session</code> file and reused for every scan afterwards. Only needs to be done once.
+                </p>
+            </section>
+        </div>
+    </div>
+
+    <script>
+    // Last completed scan, kept around so the export buttons can build a
+    // report without re-running the scan.
+    let lastScanTarget = '';
+    let lastScanLogs = '';
+
+    // Tracks what's already been rendered for the CURRENT scan, so streamed
+    // updates only ever insert what's new instead of wiping and rebuilding
+    // everything (which is what caused the "page refresh" flicker).
+    let renderedKeys = { google: false, github: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set() };
+
+    function resetRenderState() {
+        renderedKeys = { google: false, github: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set() };
+        ['slot-loading', 'slot-google', 'slot-github', 'slot-modules', 'slot-chips', 'slot-hudson'].forEach(id => {
+            document.getElementById(id).innerHTML = '';
+        });
+    }
+
+    function hasAnyResults() {
+        return renderedKeys.google || renderedKeys.github || renderedKeys.hudson ||
+               renderedKeys.modules.size > 0 || renderedKeys.chips.size > 0;
+    }
+
+    // Escapes HTML to prevent XSS injection via scraped data (bio, names, etc.)
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Only returns a URL if the scheme is http/https, to avoid malicious javascript: links
+    function safeUrl(url) {
+        if (!url) return '';
+        try {
+            const u = new URL(url, window.location.origin);
+            if (u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+        } catch (e) { /* invalid URL */ }
+        return '';
+    }
+
+    function getFavicon(site) {
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent((site || '').trim())}&sz=64`;
+    }
+
+    function toggleLogsDrawer() {
+        const drawer = document.getElementById('logs-drawer');
+        const overlay = document.getElementById('logs-overlay');
+        const isOpen = !drawer.classList.contains('translate-x-full');
+        if (isOpen) {
+            drawer.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+        } else {
+            drawer.classList.remove('translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+    }
+
+    async function copyLogs() {
+        const logsElement = document.getElementById('raw-logs');
+        const icon = document.getElementById('copy-icon');
+        try {
+            await navigator.clipboard.writeText(logsElement.textContent || '');
+            icon.className = 'fa-solid fa-check text-emerald-400';
+        } catch (e) {
+            icon.className = 'fa-solid fa-xmark text-red-500';
+        }
+        setTimeout(() => { icon.className = 'fa-regular fa-copy'; }, 1500);
+    }
+
+    function toggleGhuntDrawer() {
+        const drawer = document.getElementById('ghunt-drawer');
+        const overlay = document.getElementById('ghunt-overlay');
+        const isOpen = !drawer.classList.contains('translate-x-full');
+        if (isOpen) {
+            drawer.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+        } else {
+            drawer.classList.remove('translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+    }
+
+    async function submitGhuntLogin() {
+        const textarea = document.getElementById('ghunt-cookies');
+        const cookies = textarea.value.trim();
+        const btn = document.getElementById('ghunt-login-btn');
+        const icon = document.getElementById('ghunt-login-icon');
+        const label = document.getElementById('ghunt-login-label');
+        const resultEl = document.getElementById('ghunt-login-result');
+
+        if (!cookies) {
+            textarea.classList.add('shake', 'ring-2', 'ring-red-500');
+            setTimeout(() => textarea.classList.remove('shake'), 400);
+            textarea.focus();
+            return;
+        }
+        textarea.classList.remove('ring-2', 'ring-red-500');
+
+        btn.disabled = true;
+        icon.className = 'fa-solid fa-circle-notch fa-spin';
+        label.textContent = 'Authenticating…';
+        resultEl.className = 'hidden';
+
+        try {
+            const response = await fetch('/ghunt-login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({cookies_b64: cookies})
+            });
+            const data = await response.json();
+
+            if (!response.ok) throw new Error(data.error || `Server error (${response.status})`);
+
+            resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${data.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-red-500/10 border-red-500/30 text-red-300'}`;
+            resultEl.textContent = data.output || (data.success ? 'Authenticated.' : 'Login failed.');
+
+            if (data.success) textarea.value = '';
+        } catch (error) {
+            resultEl.className = 'text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border bg-red-500/10 border-red-500/30 text-red-300';
+            resultEl.textContent = error.message;
+        } finally {
+            btn.disabled = false;
+            icon.className = 'fa-solid fa-right-to-bracket';
+            label.textContent = 'Authenticate';
+        }
+    }
+
+    let tgLoginToken = null;
+
+    function showTelegramResult(message, ok) {
+        const resultEl = document.getElementById('tg-login-result');
+        resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${ok ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-red-500/10 border-red-500/30 text-red-300'}`;
+        resultEl.textContent = message;
+    }
+
+    async function submitTelegramSendCode() {
+        const apiId = document.getElementById('tg-api-id').value.trim();
+        const apiHash = document.getElementById('tg-api-hash').value.trim();
+        const phone = document.getElementById('tg-phone').value.trim();
+        const btn = document.getElementById('tg-send-code-btn');
+        const icon = document.getElementById('tg-send-code-icon');
+        const label = document.getElementById('tg-send-code-label');
+
+        if (!apiId || !apiHash || !phone) {
+            showTelegramResult('API ID, API Hash and phone number are all required.', false);
+            return;
+        }
+
+        btn.disabled = true;
+        icon.className = 'fa-solid fa-circle-notch fa-spin';
+        label.textContent = 'Sending…';
+        document.getElementById('tg-login-result').className = 'hidden';
+
+        try {
+            const response = await fetch('/telegram-login/start', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({api_id: apiId, api_hash: apiHash, phone: phone})
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Server error (${response.status})`);
+
+            tgLoginToken = data.token;
+            document.getElementById('tg-verify-block').classList.remove('hidden');
+            showTelegramResult(data.message || 'Code sent - check your Telegram app.', true);
+        } catch (error) {
+            showTelegramResult(error.message, false);
+        } finally {
+            btn.disabled = false;
+            icon.className = 'fa-solid fa-paper-plane';
+            label.textContent = 'Send code';
+        }
+    }
+
+    async function submitTelegramVerify() {
+        const code = document.getElementById('tg-code').value.trim();
+        const password = document.getElementById('tg-password').value;
+        const btn = document.getElementById('tg-verify-btn');
+        const icon = document.getElementById('tg-verify-icon');
+        const label = document.getElementById('tg-verify-label');
+
+        if (!tgLoginToken) {
+            showTelegramResult('Send a code first.', false);
+            return;
+        }
+        if (!code) {
+            showTelegramResult('Enter the code you received on Telegram.', false);
+            return;
+        }
+
+        btn.disabled = true;
+        icon.className = 'fa-solid fa-circle-notch fa-spin';
+        label.textContent = 'Verifying…';
+
+        try {
+            const response = await fetch('/telegram-login/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token: tgLoginToken, code: code, password: password})
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Server error (${response.status})`);
+
+            if (data.needs_password) {
+                showTelegramResult(data.message || '2FA password required - enter it above and verify again.', false);
+                document.getElementById('tg-password').focus();
+                return;
+            }
+
+            showTelegramResult(data.message || 'Authenticated.', true);
+            tgLoginToken = null;
+            document.getElementById('tg-verify-block').classList.add('hidden');
+            document.getElementById('tg-code').value = '';
+            document.getElementById('tg-password').value = '';
+        } catch (error) {
+            showTelegramResult(error.message, false);
+        } finally {
+            btn.disabled = false;
+            icon.className = 'fa-solid fa-check';
+            label.textContent = 'Verify';
+        }
+    }
+
+    function setStatus(text, dotClass, running, textClass) {
+        const dot = document.getElementById('status-dot');
+        const label = document.getElementById('status-text');
+        const progress = document.getElementById('progress-bar');
+        label.textContent = text;
+        label.parentElement.className = `mono text-[11px] font-semibold hidden sm:flex items-center gap-2 mr-1 ${textClass || 'text-zinc-600'}`;
+        dot.className = `w-1.5 h-1.5 rounded-full ${dotClass} ${running ? 'animate-pulse' : ''}`;
+        progress.className = running ? 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-amber-400 opacity-100 progress-run' : 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-amber-400 opacity-0';
+    }
+
+    function setLoading(isLoading) {
+        const btn = document.getElementById('search-btn');
+        const btnIcon = document.getElementById('search-btn-icon');
+        const btnLabel = document.getElementById('search-btn-label');
+        const input = document.getElementById('target');
+        btn.disabled = isLoading;
+        input.disabled = isLoading;
+        btnIcon.className = isLoading ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-arrow-right';
+        btnLabel.textContent = isLoading ? 'Scanning…' : 'Scan';
+    }
+
+    // --- Transition from "centered search" to "compact bar" on first scan ---
+    let hasSearched = false;
+    function enterCompactMode() {
+        if (hasSearched) return;
+        hasSearched = true;
+
+        const heroOuter = document.getElementById('hero-outer');
+        const heroBrand = document.getElementById('hero-brand');
+        const form = document.getElementById('search-form');
+        const searchIcon = document.getElementById('search-icon');
+        const input = document.getElementById('target');
+        const btn = document.getElementById('search-btn');
+
+        heroOuter.style.minHeight = '0px';
+        heroOuter.className = 'flex flex-col items-center justify-center text-center pt-5 pb-7';
+        heroBrand.style.maxHeight = '0px';
+        heroBrand.style.opacity = '0';
+        heroBrand.style.marginBottom = '0px';
+        form.className = 'w-full max-w-md';
+        searchIcon.className = 'fa-solid fa-magnifying-glass text-zinc-600 pl-3.5 text-sm';
+        input.className = 'flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-sm px-2.5 py-2.5';
+        btn.className = 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5 ring-1 ring-amber-400/25';
+    }
+
+    // Extracts success lines (✓ icon) from the raw stream and only keeps the ones that
+    // represent a detected account/service (status "Account Found"/"Registered" or a profile URL).
+    // This covers both the "email" modules (holehe, EA, Nexon...) and the Blackbird module
+    // (username search), whose results were previously never shown visually.
+    function parseServiceChips(logs) {
+        const chips = [];
+        const seen = new Set();
+        for (const match of logs.matchAll(/✓\s+(.+)/g)) {
+            const rest = match[1];
+            const parts = rest.match(/^(.+?)\s{2,}(.+)$/);
+            if (!parts) continue;
+
+            const key = parts[1].trim();
+            const value = parts[2].trim();
+            const isUrl = /^https?:\/\//i.test(value);
+            const isFound = /account found|registered/i.test(value);
+            if (!isUrl && !isFound) continue;
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            let domain = key;
+            if (isUrl) {
+                try { domain = new URL(value).hostname; } catch (e) { /* fall back to the key */ }
+            }
+            chips.push({ key, value, isUrl, domain });
+        }
+        return chips;
+    }
+
+    // --- Generic per-module-block parser ---
+    // The stdout is structured into blocks by console.module_header ("  › TITLE"), each
+    // containing •/✓/!/×/○ lines (console.info/success/warning/error/failure) and indented
+    // "└" sub-lines (console.sub_item). We rebuild this structure to visually display
+    // EVERYTHING the scan found (Proton, Gravatar, Snapchat, Vivino...), not just the
+    // modules that have a custom-built dedicated card.
+    function parseModuleBlocks(logs) {
+        const lines = logs.split('\n');
+        const blocks = [];
+        let current = null;
+
+        for (const line of lines) {
+            const headerMatch = line.match(/^\s*›\s*(.+?)\s*$/);
+            if (headerMatch) {
+                current = { title: headerMatch[1].trim(), entries: [] };
+                blocks.push(current);
+                continue;
+            }
+            if (!current) continue;
+
+            const entryMatch = line.match(/^\s{2}([•✓!×○])\s+(.+)$/);
+            if (entryMatch) {
+                const rest = entryMatch[2];
+                const parts = rest.match(/^(.+?)\s{2,}(.+)$/);
+                current.entries.push({
+                    icon: entryMatch[1],
+                    key: parts ? parts[1].trim() : rest.trim(),
+                    value: parts ? parts[2].trim() : '',
+                    subs: []
+                });
+                continue;
+            }
+
+            const subMatch = line.match(/^\s{6}└\s(.+)$/);
+            if (subMatch && current.entries.length > 0) {
+                const rest = subMatch[1];
+                const parts = rest.match(/^(.+?)\s{2,}(.+)$/);
+                current.entries[current.entries.length - 1].subs.push({
+                    key: parts ? parts[1].trim() : rest.trim(),
+                    value: parts ? parts[2].trim() : ''
+                });
+            }
+        }
+        return blocks;
+    }
+
+    function moduleVisual(title) {
+        const t = title.toUpperCase();
+        if (t.includes('PROTON')) return { icon: 'fa-solid fa-lock', ring: 'bg-violet-500/10 border-violet-500/25 text-violet-400', accent: '167,139,250', favicon: 'https://proton.me/favicon.ico' };
+        if (t.includes('WORDPRESS') || t.includes('GRAVATAR')) return { icon: 'fa-brands fa-wordpress', ring: 'bg-sky-500/10 border-sky-500/25 text-sky-400', accent: '56,189,248' };
+        if (t.includes('SNAPCHAT')) return { icon: 'fa-brands fa-snapchat', ring: 'bg-yellow-400/10 border-yellow-400/25 text-yellow-400', accent: '250,204,21' };
+        if (t.includes('VIVINO')) return { icon: 'fa-solid fa-wine-glass', ring: 'bg-rose-500/10 border-rose-500/25 text-rose-400', accent: '251,113,133' };
+        if (t.includes('FACEBOOK')) return { icon: 'fa-brands fa-facebook', ring: 'bg-blue-500/10 border-blue-500/25 text-blue-400', accent: '96,165,250' };
+        if (t.includes('GOOGLE')) return { icon: 'fa-brands fa-google', ring: 'bg-indigo-500/10 border-indigo-500/25 text-indigo-400', accent: '129,140,248' };
+        if (t.includes('PHONE')) return { icon: 'fa-solid fa-phone', ring: 'bg-teal-500/10 border-teal-500/25 text-teal-400', accent: '45,212,191' };
+        if (t.includes('LEAKCHECK')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-400', accent: '248,113,113', favicon: 'https://leakcheck.io/favicon.ico' };
+        if (t.includes('BREACH')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-400', accent: '248,113,113' };
+        return { icon: 'fa-solid fa-database', ring: 'bg-amber-500/10 border-amber-500/25 text-amber-400', accent: '251,191,36' };
+    }
+
+    function entryVisual(icon) {
+        switch (icon) {
+            case '✓': return { cls: 'text-emerald-400', ic: 'fa-solid fa-check' };
+            case '!': return { cls: 'text-amber-400', ic: 'fa-solid fa-triangle-exclamation' };
+            case '×': return { cls: 'text-red-400', ic: 'fa-solid fa-xmark' };
+            case '○': return { cls: 'text-zinc-600', ic: 'fa-solid fa-circle-minus' };
+            default: return { cls: 'text-sky-400', ic: 'fa-solid fa-circle-dot' };
+        }
+    }
+
+    function renderValue(value) {
+        if (/^https?:\/\//i.test(value)) {
+            const href = safeUrl(value);
+            if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-teal-300 hover:text-teal-200 hover:underline break-all">${escapeHtml(value)}</a>`;
+        }
+        return `<span class="break-words">${escapeHtml(value)}</span>`;
+    }
+
+    function cardHeader(icon, iconWrap, title, subtitle, faviconUrl) {
+        // Prefer the service's real favicon when we have one - falls back to the
+        // Font Awesome glyph automatically if the favicon fails to load.
+        const glyph = faviconUrl
+            ? `<img src="${faviconUrl}" alt="" class="w-5 h-5 rounded-sm object-contain" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><i class="${icon} text-base" style="display:none"></i>`
+            : `<i class="${icon} text-base"></i>`;
+        return `<div class="flex items-center gap-3.5 mb-5">
+            <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${iconWrap}">
+                ${glyph}
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-[15px] font-semibold text-zinc-100 tracking-tight truncate">${title}</h3>
+                ${subtitle ? `<p class="mono text-xs text-zinc-600 truncate mt-0.5">${subtitle}</p>` : ''}
+            </div>
+        </div>`;
+    }
+
+    // A long comma-separated list (e.g. breach names) reads as an unreadable
+    // wall of prose - render each item as its own small tag instead, plus a
+    // distinct "+N more" tag for any truncation suffix.
+    function renderTagList(value, tagClass) {
+        const match = value.match(/^(.*?)(?:\s\(\+(\d+)\s+more\))?$/s);
+        const list = (match ? match[1] : value).split(/,\s*/).filter(Boolean);
+        const moreCount = match ? match[2] : null;
+        let html = `<div class="flex flex-wrap gap-1.5 mt-1.5">`;
+        list.forEach(item => {
+            html += `<span class="text-[12.5px] font-medium ${tagClass} rounded-lg px-2.5 py-1">${escapeHtml(item)}</span>`;
+        });
+        if (moreCount) {
+            html += `<span class="text-[12.5px] font-medium bg-white/5 border border-zinc-700 text-zinc-400 rounded-lg px-2.5 py-1">+${moreCount} more</span>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    function renderModuleBlockCard(block) {
+        const vis = moduleVisual(block.title);
+        let rows = '';
+        block.entries.forEach(entry => {
+            const ev = entryVisual(entry.icon);
+            const isTagList = entry.key.toLowerCase() === 'breaches';
+            rows += `<div class="py-3.5 border-b border-zinc-800/70 last:border-0">
+                <div class="flex items-start gap-3">
+                    <i class="${ev.ic} ${ev.cls} text-sm mt-0.5 shrink-0 w-4 text-center"></i>
+                    <div class="min-w-0 flex-1">
+                        <span class="mono text-[11px] uppercase tracking-wider text-zinc-500">${escapeHtml(entry.key)}</span>
+                        ${isTagList
+                            ? renderTagList(entry.value, 'bg-red-500/10 border border-red-500/20 text-red-300')
+                            : `<div class="text-[15px] text-zinc-200 mt-0.5">${renderValue(entry.value)}</div>`}`;
+            if (entry.subs.length) {
+                rows += `<div class="mt-2.5 space-y-1.5 border-l-2 border-zinc-800 pl-3">`;
+                entry.subs.forEach(sub => {
+                    rows += `<div class="text-[13px]"><span class="text-zinc-500">${escapeHtml(sub.key)}</span> <span class="text-zinc-700">—</span> <span class="text-zinc-400">${renderValue(sub.value)}</span></div>`;
+                });
+                rows += `</div>`;
+            }
+            rows += `</div></div></div>`;
+        });
+
+        return `<div class="reveal-in glow-in card p-6" style="--accent:${vis.accent};border-left:3px solid rgba(${vis.accent},.55)">
+            ${cardHeader(vis.icon, vis.ring, block.title, null, vis.favicon)}
+            <div>${rows}</div>
+        </div>`;
+    }
+
+    function renderChip(chip) {
+        const href = chip.isUrl ? safeUrl(chip.value) : '';
+        const arrow = chip.isUrl ? '<i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-zinc-600"></i>' : '';
+        const inner = `
+            <img src="${getFavicon(chip.domain)}" class="w-5 h-5 rounded" onerror="this.style.visibility='hidden'">
+            <span class="text-[14px] text-zinc-300 font-medium">${escapeHtml(chip.key)}</span>
+            ${arrow}`;
+        const cls = "chip-in bg-zinc-900 border border-zinc-800 px-4 py-2.5 rounded-full flex items-center gap-2.5 hover:border-amber-500/50 hover:-translate-y-0.5 transition-all";
+        if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${cls}">${inner}</a>`;
+        return `<div class="${cls}">${inner}</div>`;
+    }
+
+    function emptyOrErrorCard(iconClass, iconWrapClass, title, titleClass, message) {
+        return `<div class="fade-in card p-16 sm:p-20 text-center">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center ${iconWrapClass}">
+                <i class="${iconClass} text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2.5 ${titleClass}">${title}</h2>
+            <p class="text-[15px] text-zinc-500 max-w-md mx-auto leading-relaxed">${message}</p>
+        </div>`;
+    }
+
+    function loadingSkeleton() {
+        return `<div class="card p-10 sm:p-14">
+            <div class="flex items-center gap-3 mb-7">
+                <div class="w-10 h-10 rounded-xl skeleton"></div>
+                <div class="h-3 w-40 rounded-full skeleton"></div>
+            </div>
+            <div class="space-y-3">
+                <div class="h-3 w-full rounded-full skeleton"></div>
+                <div class="h-3 w-5/6 rounded-full skeleton"></div>
+                <div class="h-3 w-2/3 rounded-full skeleton"></div>
+            </div>
+            <div class="flex items-center gap-2.5 mt-8">
+                <div class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></div>
+                <p class="mono text-[11px] text-teal-400 tracking-widest uppercase">Scanning modules…</p>
+            </div>
+        </div>`;
+    }
+
+    function createStatTiles() {
+        document.getElementById('stats-summary').innerHTML = `
+            <div class="card p-4 text-center">
+                <i class="fa-solid fa-check text-emerald-400 text-sm mb-2"></i>
+                <div id="stat-accounts" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
+                <div class="mono text-[10px] text-zinc-600 uppercase tracking-wider mt-0.5">Accounts</div>
+            </div>
+            <div class="card p-4 text-center">
+                <i class="fa-solid fa-layer-group text-teal-400 text-sm mb-2"></i>
+                <div id="stat-sections" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
+                <div class="mono text-[10px] text-zinc-600 uppercase tracking-wider mt-0.5">Sections</div>
+            </div>
+            <div class="card p-4 text-center">
+                <i id="stat-breaches-icon" class="fa-solid fa-skull-crossbones text-zinc-600 text-sm mb-2"></i>
+                <div id="stat-breaches" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
+                <div class="mono text-[10px] text-zinc-600 uppercase tracking-wider mt-0.5">Breaches</div>
+            </div>`;
+    }
+
+    function setStatValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el || el.textContent === String(value)) return;
+        el.textContent = value;
+        el.classList.remove('pulse-once');
+        void el.offsetWidth;
+        el.classList.add('pulse-once');
+    }
+
+    // --- Export (Markdown / PDF) ---
+    // Both reuse the same generic parsers as the on-screen cards (parseModuleBlocks,
+    // parseServiceChips) so the export always matches what a full scan actually found,
+    // rather than re-deriving data from the hand-built card markup.
+
+    function slugify(str) {
+        return (str || 'target').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'target';
+    }
+
+    function downloadBlob(filename, mime, content) {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function mdEscape(str) {
+        return String(str ?? '').replace(/([\\`*_[\]|])/g, '\\$1');
+    }
+
+    function mdValue(value) {
+        if (/^https?:\/\//i.test(value)) return `[${mdEscape(value)}](${value})`;
+        return mdEscape(value);
+    }
+
+    // Same dedup rule as the on-screen generic-block renderer: a block whose
+    // entries are ALL bare "✓ found" lines with no extra detail is already
+    // fully represented by the "Connected services" chips, so drop it here
+    // too instead of printing the same accounts twice.
+    function exportModuleBlocks(logs) {
+        return parseModuleBlocks(logs).filter(b =>
+            b.entries.some(e => e.icon !== '✓' || e.subs.length > 0)
+        );
+    }
+
+    function buildMarkdownReport(target, logs) {
+        const chips = parseServiceChips(logs);
+        const blocks = exportModuleBlocks(logs);
+        const lines = [];
+
+        lines.push(`# Hera OSINT Report`, '');
+        lines.push(`- **Target:** \`${target}\``);
+        lines.push(`- **Generated:** ${new Date().toLocaleString()}`, '');
+
+        if (chips.length > 0) {
+            lines.push(`## Connected services (${chips.length})`, '');
+            chips.forEach(chip => {
+                lines.push(`- **${mdEscape(chip.key)}**: ${mdValue(chip.value)}`);
+            });
+            lines.push('');
+        }
+
+        blocks.forEach(block => {
+            if (!block.entries.length) return;
+            lines.push(`## ${mdEscape(block.title)}`, '');
+            block.entries.forEach(entry => {
+                lines.push(`- **${mdEscape(entry.key)}**: ${mdValue(entry.value)}`);
+                entry.subs.forEach(sub => {
+                    lines.push(`  - ${mdEscape(sub.key)}: ${mdValue(sub.value)}`);
+                });
+            });
+            lines.push('');
+        });
+
+        lines.push('---', '_Responsible use only — your own data, or with explicit authorization._');
+        return lines.join('\n');
+    }
+
+    function exportMarkdown() {
+        if (!lastScanLogs) return;
+        const md = buildMarkdownReport(lastScanTarget, lastScanLogs);
+        downloadBlob(`hera-${slugify(lastScanTarget)}.md`, 'text/markdown', md);
+    }
+
+    // Category accent color per module, echoing the same groupings as the
+    // on-screen moduleVisual() but as print-safe hex values.
+    function moduleTheme(title) {
+        const t = title.toUpperCase();
+        if (t.includes('PROTON')) return { accent: '#7c3aed', tint: '#f5f3ff' };
+        if (t.includes('WORDPRESS') || t.includes('GRAVATAR')) return { accent: '#0284c7', tint: '#f0f9ff' };
+        if (t.includes('SNAPCHAT')) return { accent: '#ca8a04', tint: '#fefce8' };
+        if (t.includes('VIVINO')) return { accent: '#e11d48', tint: '#fff1f2' };
+        if (t.includes('FACEBOOK')) return { accent: '#2563eb', tint: '#eff6ff' };
+        if (t.includes('GOOGLE')) return { accent: '#4f46e5', tint: '#eef2ff' };
+        if (t.includes('GITHUB')) return { accent: '#0f172a', tint: '#f1f5f9' };
+        if (t.includes('PHONE')) return { accent: '#0d9488', tint: '#f0fdfa' };
+        if (t.includes('HUDSON') || t.includes('BREACH') || t.includes('STEALER')) return { accent: '#dc2626', tint: '#fef2f2' };
+        return { accent: '#b45309', tint: '#fffbeb' };
+    }
+
+    function entryDotColor(icon) {
+        switch (icon) {
+            case '✓': return '#10b981';
+            case '!': return '#f59e0b';
+            case '×': return '#ef4444';
+            case '○': return '#cbd5e1';
+            default: return '#6366f1';
+        }
+    }
+
+    function buildPrintableHtml(target, logs) {
+        const chips = parseServiceChips(logs);
+        const blocks = exportModuleBlocks(logs).filter(b => b.entries.length);
+        const breachCount = logs.includes('HUDSON ROCK')
+            ? (logs.split(/Machine #\d+/).length - 1) : 0;
+
+        const valueHtml = (value) => {
+            if (/^https?:\/\//i.test(value)) {
+                const href = safeUrl(value);
+                if (href) return `<a href="${href}">${escapeHtml(value)}</a>`;
+            }
+            return escapeHtml(value);
+        };
+
+        let chipsHtml = '';
+        if (chips.length > 0) {
+            chipsHtml = `<h2 class="section">Connected services</h2><div class="chips">` +
+                chips.map(c => {
+                    const href = c.isUrl ? safeUrl(c.value) : '';
+                    const tag = href ? 'a' : 'span';
+                    return `<${tag} class="chip"${href ? ` href="${href}"` : ''}><span class="dot"></span>${escapeHtml(c.key)}</${tag}>`;
+                }).join('') +
+                `</div>`;
+        }
+
+        const blocksHtml = blocks.map(block => {
+            const theme = moduleTheme(block.title);
+            const rows = block.entries.map(entry => {
+                const subs = entry.subs.length
+                    ? `<div class="subs">${entry.subs.map(s => `<div>${escapeHtml(s.key)}: ${valueHtml(s.value)}</div>`).join('')}</div>`
+                    : '';
+                return `<div class="row">
+                    <div class="b" style="background:${entryDotColor(entry.icon)}"></div>
+                    <div style="min-width:0">
+                        <span class="k">${escapeHtml(entry.key)}</span>
+                        <div class="v">${valueHtml(entry.value)}</div>
+                        ${subs}
+                    </div>
+                </div>`;
+            }).join('');
+            return `<div class="card" style="--accent:${theme.accent};--accentTint:${theme.tint}">
+                <h3>${escapeHtml(block.title)}</h3>
+                ${rows}
+            </div>`;
+        }).join('');
+
+        const breachColor = breachCount > 0 ? '#dc2626' : '#94a3b8';
+        const genDate = new Date().toLocaleString();
+
+        return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Hera report - ${escapeHtml(target)}</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; color: #1e293b; margin: 0; background: #f1f5f9; line-height: 1.5; }
+  .sheet { max-width: 780px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  .banner { background: linear-gradient(135deg, #3b0764, #6d28d9 50%, #0d9488); color: #fff; border-radius: 18px; padding: 26px 30px; margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; opacity: .85; }
+  .brand .mark { width: 22px; height: 22px; border-radius: 6px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; }
+  .banner h1 { font-size: 23px; margin: 14px 0 6px; font-weight: 800; letter-spacing: -.01em; }
+  .banner .meta { font-size: 13px; opacity: .9; }
+  .banner .meta code { background: rgba(255,255,255,.16); padding: 2px 7px; border-radius: 6px; font-family: ui-monospace, monospace; }
+
+  .stats { display: flex; gap: 10px; margin-bottom: 26px; }
+  .stat { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; text-align: center; }
+  .stat .n { font-size: 21px; font-weight: 800; }
+  .stat .l { font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-top: 2px; }
+
+  h2.section { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: #64748b; margin: 24px 0 12px; font-weight: 800; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; color: #334155; text-decoration: none; }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #0d9488; flex-shrink: 0; }
+
+  .card { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid var(--accent, #4f46e5); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; break-inside: avoid; page-break-inside: avoid; }
+  .card h3 { font-size: 13.5px; font-weight: 800; margin: 0 0 10px; color: var(--accent, #0f172a); }
+  .row { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid #f1f5f9; }
+  .row:first-of-type { border-top: none; padding-top: 2px; }
+  .row .b { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .row .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; display: block; }
+  .row .v { font-size: 13.5px; color: #1e293b; margin-top: 1px; word-break: break-word; }
+  .row .v a { color: #0f766e; text-decoration: none; font-weight: 600; }
+  .row .v a:hover { text-decoration: underline; }
+  .subs { margin-top: 6px; padding-left: 12px; border-left: 2px solid #e2e8f0; }
+  .subs div { font-size: 12px; color: #64748b; margin: 3px 0; word-break: break-word; }
+
+  footer { margin-top: 32px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 10.5px; color: #94a3b8; }
+  @media print { body { background: #fff; } .card, .stat, .chip { box-shadow: none; } }
+</style></head>
+<body>
+  <div class="sheet">
+    <div class="banner">
+      <div class="brand"><span class="mark">H</span> Hera OSINT</div>
+      <h1>Intelligence Report</h1>
+      <div class="meta">Target <code>${escapeHtml(target)}</code> &nbsp;&middot;&nbsp; Generated ${escapeHtml(genDate)}</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n" style="color:#059669">${chips.length}</div><div class="l">Accounts</div></div>
+      <div class="stat"><div class="n" style="color:#0d9488">${blocks.length}</div><div class="l">Modules</div></div>
+      <div class="stat"><div class="n" style="color:${breachColor}">${breachCount}</div><div class="l">Breaches</div></div>
+    </div>
+
+    ${chipsHtml}
+    ${blocksHtml}
+
+    <footer>
+      <span>Hera — responsible use only, your own data or with explicit authorization.</span>
+      <span>${escapeHtml(genDate)}</span>
+    </footer>
+  </div>
+</body></html>`;
+    }
+
+    function exportPdf() {
+        if (!lastScanLogs) return;
+        const html = buildPrintableHtml(lastScanTarget, lastScanLogs);
+        const win = window.open('', '_blank');
+        if (!win) return; // popup blocked
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        win.onload = () => win.print();
+    }
+
+    // Renders the visual results from the raw scan output collected SO FAR.
+    // Called once per streamed update (isFinal=false, growing log text) and
+    // once more when the scan completes (isFinal=true) - each call rebuilds
+    // the results from scratch from the cumulative text, so results simply
+    // "appear" as their module's output shows up in the stream.
+    // Renders whatever is NEW in the cumulative scan output since the last call.
+    // Called once per streamed update (isFinal=false) and once more when the
+    // scan completes (isFinal=true). Only ever APPENDS newly-discovered cards/
+    // chips into their fixed slot - already-rendered results are never touched,
+    // so nothing re-animates or flickers as later updates arrive.
+    function renderResults(target, logs, isFinal) {
+        const logsElement = document.getElementById('raw-logs');
+        const exportBar = document.getElementById('export-bar');
+        logsElement.textContent = logs || "No output.";
+        lastScanTarget = target;
+        lastScanLogs = logs;
+
+        // --- 1. GOOGLE PROFILE (STDOUT parsing) ---
+        const googleGaia = logs.match(/Gaia ID\s+(.*)/)?.[1]?.trim();
+        if (!renderedKeys.google && googleGaia) {
+            const googleName = logs.match(/Profile Name\s+(.*)/)?.[1]?.trim() || "Google user";
+            const googlePhoto = logs.match(/Photo URL\s+(.*)/)?.[1]?.trim();
+            const googleUpdate = logs.match(/Last Update\s+(.*)/)?.[1]?.trim() || "N/A";
+            const googleServices = logs.match(/Services\s+(.*)/)?.[1]?.trim();
+            const googleUserTypes = logs.match(/User Types\s+(.*)/)?.[1]?.trim();
+            const mapsUrl = `https://maps.google.com/maps/contrib/${encodeURIComponent(googleGaia)}`;
+            const photoSrc = safeUrl(googlePhoto) || 'https://www.gstatic.com/images/branding/product/2x/avatar_anonymous_72x72.png';
+            document.getElementById('slot-google').innerHTML = `
+                <div class="reveal-in glow-in card p-7 sm:p-8 scroll-mt-24" style="--accent:129,140,248">
+                    ${cardHeader('fa-brands fa-google', 'bg-indigo-500/10 border-indigo-500/25 text-indigo-400', 'Google Identity')}
+                    <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                        <img src="${photoSrc}" class="w-24 h-24 rounded-2xl object-cover border border-zinc-800 bg-zinc-900 shrink-0" onerror="this.src='https://www.gstatic.com/images/branding/product/2x/avatar_anonymous_72x72.png'">
+                        <div class="flex-1 min-w-0 text-center md:text-left">
+                            <p class="text-xl font-bold text-zinc-50 break-words tracking-tight">${escapeHtml(googleName)}</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-4 mono text-[13px]">
+                                <div class="text-zinc-500">GAIA ID <span class="text-zinc-200 block sm:inline">${escapeHtml(googleGaia)}</span></div>
+                                <div class="text-zinc-500">LAST UPDATE <span class="text-zinc-200 block sm:inline">${escapeHtml(googleUpdate)}</span></div>
+                                ${googleUserTypes ? `<div class="text-zinc-500 col-span-full break-words">TYPE(S) <span class="text-zinc-300">${escapeHtml(googleUserTypes)}</span></div>` : ''}
+                                ${googleServices ? `<div class="col-span-full text-zinc-500 break-words">SERVICES <span class="text-zinc-300">${escapeHtml(googleServices)}</span></div>` : ''}
+                            </div>
+                            <div class="flex flex-wrap justify-center md:justify-start gap-5 mt-5 text-[13px] font-semibold">
+                                <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5"><i class="fa-solid fa-map-location-dot"></i> Maps contributions</a>
+                                ${safeUrl(googlePhoto) ? `<a href="${safeUrl(googlePhoto)}" target="_blank" rel="noopener noreferrer" class="text-teal-300 hover:text-teal-200 flex items-center gap-1.5"><i class="fa-solid fa-image"></i> View photo</a>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            renderedKeys.google = true;
+        }
+
+        // --- 2. GITHUB DEEP ANALYSIS (kept in English, matches the backend header text) ---
+        if (!renderedKeys.github && logs.includes("GITHUB DEEP ANALYSIS")) {
+            const ghProfile = logs.match(/GitHub Profile\s+(.*)/)?.[1]?.trim() || "N/A";
+            const ghName = logs.match(/Full Name\s+(.*)/)?.[1]?.trim() || "N/A";
+            const ghRepo = logs.match(/Public Repos\s+(.*)/)?.[1]?.trim() || "0";
+            const ghBio = logs.match(/Bio\s+(.*)/)?.[1]?.trim() || "No bio information found";
+            const ghCreated = logs.match(/Created on\s+(.*)/)?.[1]?.trim() || "N/A";
+            const harvested = [...logs.matchAll(/└\s+(\S+@\S+)\s{2,}(.+)/g)]
+                .map(m => ({ email: m[1].trim(), name: m[2].trim() }));
+
+            const ghUrl = ghProfile && ghProfile !== "N/A" ? safeUrl(`https://github.com/${encodeURIComponent(ghProfile)}`) : '';
+            const ghSubtitle = ghUrl
+                ? `<a href="${ghUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-teal-300 hover:underline">${escapeHtml(ghProfile)}</a>`
+                : escapeHtml(ghProfile);
+
+            document.getElementById('slot-github').innerHTML = `
+                <div class="reveal-in glow-in rounded-2xl p-7 sm:p-8 relative overflow-hidden border border-zinc-800 scroll-mt-24" style="background:#0d1117;--accent:255,255,255">
+                    <i class="fa-brands fa-github absolute -right-4 -top-4 text-8xl text-white/[0.03] pointer-events-none"></i>
+                    <div class="relative z-10">
+                        ${cardHeader('fa-brands fa-github', 'bg-white/5 border-white/15 text-white', 'GitHub Intelligence', ghSubtitle)}
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                            <div class="md:col-span-2">
+                                <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-2">Biography</p>
+                                <p class="text-[14px] text-zinc-300 leading-relaxed bg-white/[0.03] p-4 rounded-xl border border-white/5 break-words">${escapeHtml(ghBio)}</p>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-1">Display name</p>
+                                    <p class="text-[14px] text-white font-semibold break-words">${escapeHtml(ghName)}</p>
+                                </div>
+                                <div>
+                                    <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-1">Account age</p>
+                                    <p class="mono text-[14px] text-zinc-300">${escapeHtml(ghCreated.split('T')[0])}</p>
+                                </div>
+                            </div>
+                            <div class="rounded-xl p-4 border border-amber-500/25 bg-amber-500/[0.07] flex flex-col justify-center items-center text-center">
+                                <p class="mono text-[11px] text-amber-400 uppercase tracking-widest mb-1">Public repos</p>
+                                <p class="text-4xl font-extrabold text-amber-400 tracking-tight">${escapeHtml(ghRepo)}</p>
+                            </div>
+                        </div>
+                        ${ghUrl ? `
+                        <div class="flex flex-wrap gap-5 mt-5 text-[13px] font-semibold">
+                            <a href="${ghUrl}" target="_blank" rel="noopener noreferrer" class="text-white hover:text-zinc-300 flex items-center gap-1.5"><i class="fa-brands fa-github"></i> View on GitHub</a>
+                        </div>` : ''}
+                        ${harvested.length ? `
+                        <div class="mt-6 pt-5 border-t border-zinc-800">
+                            <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-3">Emails found in Git history (${harvested.length})</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${harvested.map(h => `<span class="mono text-[12px] bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-zinc-300">${escapeHtml(h.email)} <span class="text-zinc-600">· ${escapeHtml(h.name)}</span></span>`).join('')}
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>`;
+            renderedKeys.github = true;
+        }
+
+        // --- 3. OTHER MODULES (Proton, WordPress/Gravatar, Snapchat, Vivino, diagnostics...) ---
+        const skipTitles = ['HUDSON ROCK', 'GITHUB', 'SOCIAL MEDIA'];
+        if (renderedKeys.google) skipTitles.push('GOOGLE IDENTITY');
+
+        const blocks = parseModuleBlocks(logs).filter(b => {
+            const upper = b.title.toUpperCase();
+            if (skipTitles.some(s => upper.includes(s))) return false;
+            return b.entries.some(e => e.icon !== '✓' || e.subs.length > 0);
+        });
+
+        const modulesSlot = document.getElementById('slot-modules');
+        blocks.forEach(block => {
+            if (renderedKeys.modules.has(block.title)) return;
+            renderedKeys.modules.add(block.title);
+            modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block));
+        });
+
+        // --- 4. SOCIAL MEDIA / CONNECTED SERVICES ---
+        const chips = parseServiceChips(logs);
+        if (chips.length > 0) {
+            const chipsSlot = document.getElementById('slot-chips');
+            if (!renderedKeys.chipsCard) {
+                chipsSlot.innerHTML = `
+                    <div class="reveal-in card p-6 scroll-mt-24">
+                        ${cardHeader('fa-solid fa-share-nodes', 'bg-sky-500/10 border-sky-500/25 text-sky-400', 'Registered on', '<span id="chips-count"></span>')}
+                        <div id="chips-list" class="flex flex-wrap gap-2.5"></div>
+                    </div>`;
+                renderedKeys.chipsCard = true;
+            }
+            const chipsList = document.getElementById('chips-list');
+            chips.forEach(chip => {
+                if (renderedKeys.chips.has(chip.key)) return;
+                renderedKeys.chips.add(chip.key);
+                chipsList.insertAdjacentHTML('beforeend', renderChip(chip));
+            });
+            const countEl = document.getElementById('chips-count');
+            if (countEl) countEl.textContent = `${chips.length} found`;
+        }
+
+        // --- 5. STEALER LOGS / DATA BREACHES (kept last, most severe finding at the bottom) ---
+        let breachCount = logs.includes("HUDSON ROCK") ? logs.split(/Machine #\d+/).length - 1 : 0;
+        if (!renderedKeys.hudson && logs.includes("HUDSON ROCK")) {
+            const machines = logs.split(/Machine #\d+/).slice(1);
+            let html = `<div class="reveal-in scroll-mt-24">
+                <div class="flex items-center gap-3.5 mb-4 px-1">
+                    <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 bg-red-500/10 border-red-500/25 text-red-400">
+                        <i class="fa-solid fa-skull-crossbones text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[15px] font-semibold text-red-400 tracking-tight">Stealer logs</h3>
+                        <p class="mono text-xs text-zinc-600 mt-0.5">${machines.length} infected machine${machines.length > 1 ? 's' : ''}</p>
+                    </div>
+                </div>
+                <div class="space-y-3">`;
+            machines.forEach((m, i) => {
+                const sys = m.match(/System\s+:\s+([^\n]+)/)?.[1] || "N/A";
+                const ip = m.match(/IP:\s+([^\n]+)/)?.[1] || "N/A";
+                const date = m.match(/Infected\s+:\s+([^\n]+)/)?.[1] || "N/A";
+                const impact = m.match(/Impact\s+:\s+([^\n]+)/)?.[1] || "N/A";
+                const logins = m.match(/Logins\s+:\s+([^\n]+)/)?.[1] || "None";
+                const pwds = m.match(/Passwords\s+:\s+([^\n]+)/)?.[1] || "None";
+
+                html += `
+                    <div class="card-flat border-l-2 border-l-red-500 rounded-2xl p-6 relative">
+                        <div class="absolute top-0 right-0 bg-red-500/10 px-3 py-1.5 rounded-bl-xl rounded-tr-2xl text-red-400 mono text-[10px] font-bold tracking-wide">INFECTION #0${i+1}</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-1">
+                            <div class="text-[13px] space-y-2.5">
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">System</span> <span class="text-zinc-300">${escapeHtml(sys)}</span></p>
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">IP address</span> <span class="text-red-400 mono">${escapeHtml(ip)}</span></p>
+                            </div>
+                            <div class="text-[13px] space-y-2.5">
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">Date</span> <span class="text-zinc-300">${escapeHtml(date)}</span></p>
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">Impact</span> <span class="text-orange-400">${escapeHtml(impact)}</span></p>
+                            </div>
+                            <div class="bg-black/40 p-3.5 rounded-xl border border-white/5 mono text-[11px]">
+                                <p class="text-emerald-400 mb-1 font-bold">LOGINS</p><p class="text-zinc-400 break-all mb-3">${escapeHtml(logins)}</p>
+                                <p class="text-pink-400 mb-1 font-bold">PASSWORDS</p><p class="text-zinc-400 break-all">${escapeHtml(pwds)}</p>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('slot-hudson').innerHTML = html + `</div></div>`;
+            renderedKeys.hudson = true;
+        }
+
+        // --- Loading / empty state, kept in its own slot at the top ---
+        const loadingSlot = document.getElementById('slot-loading');
+        if (hasAnyResults()) {
+            loadingSlot.innerHTML = '';
+        } else if (isFinal) {
+            loadingSlot.innerHTML = emptyOrErrorCard(
+                'fa-solid fa-ghost text-zinc-600', 'bg-white/5',
+                'No footprint detected', 'text-zinc-300',
+                "This target doesn't match any known account across the scanned modules."
+            );
+        } else if (!loadingSlot.innerHTML) {
+            loadingSlot.innerHTML = loadingSkeleton();
+        }
+
+        // --- Stats: update the existing tiles in place, pulse only the ones that changed ---
+        const sectionCount = (renderedKeys.google ? 1 : 0) + (renderedKeys.github ? 1 : 0) +
+            renderedKeys.modules.size + (chips.length > 0 ? 1 : 0) + (renderedKeys.hudson ? 1 : 0);
+        setStatValue('stat-accounts', chips.length);
+        setStatValue('stat-sections', sectionCount);
+        setStatValue('stat-breaches', breachCount);
+        const breachIcon = document.getElementById('stat-breaches-icon');
+        if (breachIcon) breachIcon.className = `fa-solid fa-skull-crossbones text-sm mb-2 ${breachCount > 0 ? 'text-red-400' : 'text-zinc-600'}`;
+
+        if (hasAnyResults()) exportBar.classList.remove('hidden');
+    }
+
+    function runInvestigation() {
+        const targetInput = document.getElementById('target');
+        const target = targetInput.value.trim();
+
+        if (!target) {
+            targetInput.classList.add('shake', 'ring-2', 'ring-red-500');
+            setTimeout(() => targetInput.classList.remove('shake'), 400);
+            targetInput.focus();
+            return;
+        }
+        targetInput.classList.remove('ring-2', 'ring-red-500');
+
+        enterCompactMode();
+        document.getElementById('dashboard').classList.remove('hidden');
+
+        const targetSummary = document.getElementById('target-summary');
+        const logsElement = document.getElementById('raw-logs');
+        const exportBar = document.getElementById('export-bar');
+        const loadingSlot = document.getElementById('slot-loading');
+
+        exportBar.classList.add('hidden');
+        lastScanTarget = '';
+        lastScanLogs = '';
+        resetRenderState();
+        createStatTiles();
+
+        setLoading(true);
+        const isEmail = target.includes('@');
+        targetSummary.innerHTML = `
+            <div class="flex items-center gap-2 mb-1.5">
+                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-teal-400 text-xs"></i>
+                <span class="mono text-[10px] uppercase tracking-wider text-zinc-500">Target</span>
+            </div>
+            <p class="text-[15px] text-zinc-100 break-all font-medium">${escapeHtml(target)}</p>`;
+        loadingSlot.innerHTML = loadingSkeleton();
+        logsElement.textContent = "› Scanning...";
+        setStatus('SCANNING...', 'bg-teal-400', true, 'text-teal-400');
+
+        let gotAnyUpdate = false;
+        const es = new EventSource(`/scan-stream?target=${encodeURIComponent(target)}`);
+
+        es.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                gotAnyUpdate = true;
+                renderResults(target, data.raw_logs || '', false);
+            } catch (e) { /* ignore a malformed partial frame, next one will catch up */ }
+        };
+
+        es.addEventListener('done', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                renderResults(target, data.raw_logs || '', true);
+            } catch (e) { /* keep whatever was last rendered */ }
+            es.close();
+            setStatus('DONE', 'bg-emerald-400', false, 'text-emerald-400');
+            setLoading(false);
+        });
+
+        es.addEventListener('scan_error', (event) => {
+            let message = 'Scan failed.';
+            try { message = JSON.parse(event.data).error || message; } catch (e) { /* keep default message */ }
+            es.close();
+            setStatus('ERROR', 'bg-red-500', false, 'text-red-400');
+            lastScanTarget = '';
+            lastScanLogs = '';
+            loadingSlot.innerHTML = emptyOrErrorCard(
+                'fa-solid fa-triangle-exclamation text-red-400', 'bg-red-500/10',
+                "Scan failed", 'text-red-400',
+                `<span class="mono">${escapeHtml(message)}</span>`
+            );
+            setLoading(false);
+        });
+
+        es.onerror = () => {
+            es.close();
+            setLoading(false);
+            if (gotAnyUpdate) {
+                // Connection dropped after we already had (possibly partial) results -
+                // keep them on screen rather than replacing with an error card.
+                setStatus('DONE', 'bg-emerald-400', false, 'text-emerald-400');
+                return;
+            }
+            setStatus('ERROR', 'bg-red-500', false, 'text-red-400');
+            loadingSlot.innerHTML = emptyOrErrorCard(
+                'fa-solid fa-triangle-exclamation text-red-400', 'bg-red-500/10',
+                "Scan failed", 'text-red-400',
+                `<span class="mono">Connection to the server was lost.</span>`
+            );
+        };
+    }
+
+    document.getElementById('search-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        runInvestigation();
+    });
+    </script>
+</body>
+</html>
