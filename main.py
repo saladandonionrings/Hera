@@ -15,8 +15,9 @@ from core.config import is_valid_email, is_valid_phone, PROTON_DOMAINS
 
 # OSINT modules
 from modules import (
-    BlackbirdScanner, 
-    GitHubScanner, 
+    BlackbirdScanner,
+    MaigretScanner,
+    GitHubScanner,
     ProtonScanner, 
     GoogleScanner, 
     EmailSocialScanner, 
@@ -225,6 +226,11 @@ class EpeiosPro:
 
                 hr.scan_username(self.target)
                 VivinoScanner().scan(self.target)
+
+                # Maigret covers a much broader (and slower) sweep of sites than
+                # the checks above, so it runs last - fast results stream to the
+                # UI first, this fills in the rest once it completes.
+                MaigretScanner(self.target).scan()
 
         rich_console.print(f"\n[cyan]{'─' * 60}[/cyan]\n")
 
