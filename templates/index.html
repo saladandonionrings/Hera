@@ -781,15 +781,25 @@
     }
 
     // Profile-picture-shaped fields read as unreadable wall-of-URL text like
-    // any other link - render them as an actual framed thumbnail instead,
-    // clickable through to the full-size image.
+    // any other link, and cramming a tall image inline next to its text
+    // label baseline-aligns them (label ends up looking like it's stuck
+    // under the picture) - pulled out of the normal row list entirely and
+    // shown as a framed thumbnail up front instead, before anything else.
+    // A blank key (used when a module has nothing meaningful to caption the
+    // picture with) plus a URL value counts too, so a module doesn't need a
+    // name from this fixed list just to get the same treatment.
     const AVATAR_FIELD_KEYS = new Set(['avatar', 'avatar url', 'profile picture', 'profile pic', 'photo url', 'snapcode url', 'bitmoji 3d']);
 
-    function renderAvatarValue(value) {
+    function isAvatarEntry(entry) {
+        return AVATAR_FIELD_KEYS.has(entry.key.toLowerCase()) ||
+            (!entry.key.trim() && /^https?:\/\//i.test(entry.value));
+    }
+
+    function renderAvatarHero(value) {
         const src = safeUrl(value);
-        if (!src) return renderValue(value);
-        return `<a href="${src}" target="_blank" rel="noopener noreferrer" class="inline-block mt-1.5 rounded-xl border border-[#e4d7bb] overflow-hidden bg-stone-100 hover:border-teal-600/50 transition-colors">
-            <img src="${src}" alt="" class="w-20 h-20 object-cover block" onerror="this.parentElement.style.display='none'">
+        if (!src) return '';
+        return `<a href="${src}" target="_blank" rel="noopener noreferrer" class="block rounded-2xl border border-[#e4d7bb] overflow-hidden bg-stone-100 hover:border-teal-600/50 transition-colors shadow-sm shrink-0">
+            <img src="${src}" alt="" class="w-24 h-24 object-cover block" onerror="this.parentElement.style.display='none'">
         </a>`;
     }
 
@@ -830,11 +840,21 @@
 
     function renderModuleBlockCard(block, delayMs) {
         const vis = moduleVisual(block.title);
+
+        // Avatar-shaped entries are pulled out and shown first, as a framed
+        // hero image above everything else, instead of wherever they happen
+        // to fall in the field order.
+        const avatarEntries = block.entries.filter(isAvatarEntry);
+        const otherEntries = block.entries.filter(e => !isAvatarEntry(e));
+        const avatarThumbs = avatarEntries.map(e => renderAvatarHero(e.value)).filter(Boolean);
+        const avatarHtml = avatarThumbs.length
+            ? `<div class="flex justify-center flex-wrap gap-3 mb-5">${avatarThumbs.join('')}</div>`
+            : '';
+
         let rows = '';
-        block.entries.forEach(entry => {
+        otherEntries.forEach(entry => {
             const ev = entryVisual(entry.icon);
             const isTagList = entry.key.toLowerCase() === 'breaches';
-            const isAvatar = AVATAR_FIELD_KEYS.has(entry.key.toLowerCase());
             rows += `<div class="py-3.5 border-b border-[#ece1c6] last:border-0">
                 <div class="flex items-start gap-3">
                     <i class="${ev.ic} ${ev.cls} text-sm mt-0.5 shrink-0 w-4 text-center"></i>
@@ -842,9 +862,7 @@
                         <span class="mono text-[11px] uppercase tracking-wider text-zinc-500">${escapeHtml(entry.key)}</span>
                         ${isTagList
                             ? renderTagList(entry.value, 'bg-red-500/10 border border-red-500/20 text-red-700')
-                            : isAvatar
-                                ? renderAvatarValue(entry.value)
-                                : `<div class="text-[15px] text-stone-800 mt-0.5">${renderValue(entry.value)}</div>`}`;
+                            : `<div class="text-[15px] text-stone-800 mt-0.5">${renderValue(entry.value)}</div>`}`;
             if (entry.subs.length) {
                 rows += `<div class="mt-2.5 space-y-1.5 border-l-2 border-[#ece1c6] pl-3">`;
                 entry.subs.forEach(sub => {
@@ -857,6 +875,7 @@
 
         return `<div class="reveal-in glow-in card p-6" style="--accent:${vis.accent};border-left:3px solid rgba(${vis.accent},.55);animation-delay:${delayMs || 0}ms">
             ${cardHeader(vis.icon, vis.ring, block.title, null, vis.favicon)}
+            ${avatarHtml}
             <div>${rows}</div>
         </div>`;
     }
