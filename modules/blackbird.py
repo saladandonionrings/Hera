@@ -40,7 +40,9 @@ class BlackbirdScanner:
         found_any = self.check_nexon()
         targets = [
             # --- socials ---
-            ("Instagram", f"https://imginn.com/{self.username}/", "status", 200),
+            # Instagram is not checked here - InstagramScanner (deep analysis
+            # module, called separately) is the sole source for it, hitting
+            # instagram.com's own API instead of a third-party proxy.
             ("X (Twitter)", f"https://nitter.net/{self.username}", "nitter_check", None),
             ("Snapchat", f"https://www.snapchat.com/add/{self.username}", "text_present", "og:title"),
             ("TikTok", f"https://www.tiktok.com/@{self.username}", "text_not_present", "Couldn't find this account"),
@@ -69,7 +71,8 @@ class BlackbirdScanner:
             ("Genius (User)", f"https://genius.com/{self.username}", "status", 200),
             ("Genius (Artist)", f"https://genius.com/artists/{self.username}", "status", 200),
             ("Spotify", f"https://open.spotify.com/user/{self.username}", "text_present", "spotify:user:"),
-            ("SoundCloud", f"https://soundcloud.com/{self.username}", "status", 200),
+            # SoundCloud is not checked here either - SoundCloudScanner (deep
+            # analysis module) is the sole source for it.
             ("Letterboxd", f"https://letterboxd.com/{self.username}/", "status", 200),
             ("Vimeo", f"https://vimeo.com/{self.username}", "status", 200),
 
