@@ -18,10 +18,13 @@ from modules import (
     BlackbirdScanner,
     MaigretScanner,
     GitHubScanner,
-    ProtonScanner, 
-    GoogleScanner, 
-    EmailSocialScanner, 
+    ProtonScanner,
+    GoogleScanner,
+    EmailSocialScanner,
     SnapchatScanner,
+    InstagramScanner,
+    SoundCloudScanner,
+    YouTubeScanner,
     WordPressEmailScanner,
     FacebookScanner,
     LeboncoinScanner,
@@ -192,7 +195,10 @@ class EpeiosPro:
                 
                 has_github = BlackbirdScanner(self.target).scan()
                 SnapchatScanner(self.target).scan()
-                
+                InstagramScanner(self.target).scan()
+                SoundCloudScanner(self.target).scan()
+                YouTubeScanner(self.target).scan()
+
                 if has_github:
                     GitHubScanner(self.target).scan()
                 

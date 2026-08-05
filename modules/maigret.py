@@ -32,7 +32,7 @@ ALREADY_COVERED_SITES = {
     "duolingo", "quora", "slideshare", "goodreads", "buymeacoffee", "patreon",
     "gravatar", "polarsteps", "minecraft", "gitlab", "hackernews", "npm",
     "docker hub", "bitbucket", "smule", "pokemon showdown", "xbox gamertag",
-    "picsart", "trello",
+    "picsart", "trello", "youtube",
 }
 
 # Exact site names as they appear in maigret's data.json - kept lowercase
@@ -63,7 +63,7 @@ class MaigretScanner:
 
         with tempfile.TemporaryDirectory(prefix="hera-maigret-") as report_dir:
             try:
-                subprocess.run(
+                process = subprocess.run(
                     [
                         "maigret", self.username,
                         "--json", "simple",
@@ -72,6 +72,12 @@ class MaigretScanner:
                         "--no-autoupdate",
                         "--no-progressbar",
                         "--no-color",
+                        # Both needed so a fully-blocked run (proxy/firewall
+                        # eating every request) can be told apart from a
+                        # clean scan that genuinely found nothing - by
+                        # default maigret only prints claimed sites.
+                        "--print-errors",
+                        "--print-not-found",
                     ],
                     capture_output=True,
                     text=True,
@@ -90,7 +96,11 @@ class MaigretScanner:
             report_path = os.path.join(report_dir, f"report_{safe_username}_simple.json")
 
             if not os.path.exists(report_path):
-                console.failure("Maigret", "No accounts found.")
+                # The report file is always written (even empty) once maigret
+                # reaches the end of a scan, so a missing file means the
+                # process didn't get that far - surface why instead of
+                # reporting a misleading "not found".
+                self._report_run_failure(process)
                 return False
 
             try:
@@ -111,6 +121,41 @@ class MaigretScanner:
             found_any = True
 
         if not found_any:
-            console.failure("Maigret", "No accounts found.")
+            errors, checked_clean = self._scan_health(process.stdout)
+            # A clean scan reports each site as either found or genuinely
+            # not-found; if almost everything instead came back as an error,
+            # "not found" would be misleading - the sites were never really
+            # reachable to check in the first place.
+            if errors > 5 and errors > checked_clean * 2:
+                console.warning("Maigret", f"{errors} site checks errored out (network/DNS likely blocked) - results are incomplete.")
+            else:
+                console.failure("Maigret", "No accounts found.")
 
         return found_any
+
+    @staticmethod
+    def _scan_health(stdout):
+        """Counts maigret's per-site result lines (enabled via --print-errors
+        / --print-not-found above) to tell a clean "genuinely not found" scan
+        apart from one where every request errored out. Plain substring
+        counts rather than anchored regexes, since each live-updating result
+        line is prefixed with a bare "\\r" (no newline) for the in-place
+        terminal redraw, which a line-start anchor won't match."""
+        stdout = stdout or ""
+        errors = stdout.count("[?] ")
+        checked_clean = stdout.count(": Not found!") + stdout.count("Illegal Username Format For This Site!")
+        return errors, checked_clean
+
+    def _report_run_failure(self, process):
+        """Gives a concrete reason when maigret exits without writing a
+        report, instead of leaving the user staring at a bare "not found"
+        that could just as easily mean "the whole scan errored out"."""
+        stderr = (process.stderr or "").strip()
+        stdout = (process.stdout or "").strip()
+
+        if process.returncode != 0:
+            tail = (stderr or stdout).strip().splitlines()
+            snippet = tail[-1][:160] if tail else f"exit code {process.returncode}"
+            console.warning("Maigret", f"scan failed: {snippet}")
+        else:
+            console.warning("Maigret", "scan finished without producing a report - check network access to target sites.")

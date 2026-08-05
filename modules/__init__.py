@@ -7,6 +7,9 @@ from .proton import ProtonScanner
 from .google import GoogleScanner
 from .holehe import EmailSocialScanner
 from .snapchat import SnapchatScanner
+from .instagram import InstagramScanner
+from .soundcloud import SoundCloudScanner
+from .youtube import YouTubeScanner
 from .wordpress import WordPressEmailScanner
 from .steam import SteamScanner
 from .facebook import FacebookScanner
