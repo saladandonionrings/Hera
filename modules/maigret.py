@@ -40,6 +40,26 @@ ALREADY_COVERED_SITES = {
 # auto-updated independently of Hera and occasionally tweaks casing.
 EXCLUDED_SITES = FALSE_POSITIVE_SITES | ALREADY_COVERED_SITES
 
+# Cache of whether the installed `maigret` build accepts --no-autoupdate,
+# probed once per process instead of assumed - the flag isn't present in
+# every published version, and a hardcoded assumption broke the whole scan
+# outright (argparse rejects unknown flags before running anything) on an
+# install whose CLI predates it.
+_supports_no_autoupdate = None
+
+
+def _maigret_supports_no_autoupdate():
+    global _supports_no_autoupdate
+    if _supports_no_autoupdate is None:
+        try:
+            help_out = subprocess.run(
+                ["maigret", "--help"], capture_output=True, text=True, timeout=15
+            ).stdout
+            _supports_no_autoupdate = "--no-autoupdate" in (help_out or "")
+        except Exception:
+            _supports_no_autoupdate = False
+    return _supports_no_autoupdate
+
 
 class MaigretScanner:
     """Runs the `maigret` OSINT username-search tool as a subprocess.
@@ -62,23 +82,26 @@ class MaigretScanner:
             return False
 
         with tempfile.TemporaryDirectory(prefix="hera-maigret-") as report_dir:
+            cmd = [
+                "maigret", self.username,
+                "--json", "simple",
+                "--folderoutput", report_dir,
+                "--timeout", "15",
+                "--no-progressbar",
+                "--no-color",
+                # Both needed so a fully-blocked run (proxy/firewall eating
+                # every request) can be told apart from a clean scan that
+                # genuinely found nothing - by default maigret only prints
+                # claimed sites.
+                "--print-errors",
+                "--print-not-found",
+            ]
+            if _maigret_supports_no_autoupdate():
+                cmd.append("--no-autoupdate")
+
             try:
                 process = subprocess.run(
-                    [
-                        "maigret", self.username,
-                        "--json", "simple",
-                        "--folderoutput", report_dir,
-                        "--timeout", "15",
-                        "--no-autoupdate",
-                        "--no-progressbar",
-                        "--no-color",
-                        # Both needed so a fully-blocked run (proxy/firewall
-                        # eating every request) can be told apart from a
-                        # clean scan that genuinely found nothing - by
-                        # default maigret only prints claimed sites.
-                        "--print-errors",
-                        "--print-not-found",
-                    ],
+                    cmd,
                     capture_output=True,
                     text=True,
                     timeout=self.timeout,
