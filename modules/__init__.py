@@ -1,6 +1,7 @@
 # modules/__init__.py
 
 from .blackbird import BlackbirdScanner
+from .maigret import MaigretScanner
 from .github import GitHubScanner
 from .proton import ProtonScanner
 from .google import GoogleScanner
