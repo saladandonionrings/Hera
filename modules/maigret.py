@@ -32,7 +32,7 @@ ALREADY_COVERED_SITES = {
     "duolingo", "quora", "slideshare", "goodreads", "buymeacoffee", "patreon",
     "gravatar", "polarsteps", "minecraft", "gitlab", "hackernews", "npm",
     "docker hub", "bitbucket", "smule", "pokemon showdown", "xbox gamertag",
-    "picsart", "trello",
+    "picsart", "trello", "youtube",
 }
 
 # Exact site names as they appear in maigret's data.json - kept lowercase
