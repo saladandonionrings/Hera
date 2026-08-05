@@ -11,12 +11,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Antique-gold palette, tuned to the same hex already used for the Greek
+        // meander motif (#d4af37) - swaps out the stock, over-saturated Tailwind
+        // amber for something that actually reads as "gold trim" next to the
+        // purple/teal ground instead of clashing traffic-cone orange.
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50:  '#fbf6e9',
+                            100: '#f5e9c4',
+                            200: '#ecd58e',
+                            300: '#e2bd63',
+                            400: '#d4af37',
+                            500: '#b6912b',
+                            600: '#8f7222',
+                            700: '#6b551a',
+                        },
+                    },
+                },
+            },
+        };
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             color-scheme: dark;
             --accent: 45, 212, 191;
-            --gold: 251, 191, 36;
+            --gold: 212, 175, 55;
         }
 
         * { scrollbar-width: thin; scrollbar-color: #4c3a63 transparent; }
@@ -26,25 +50,28 @@
 
         html { scroll-behavior: smooth; }
         body {
-            background: #0c0814;
-            color: #e4e4e7;
+            background: #0b0710;
+            color: #e7e5ec;
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             position: relative;
         }
         /* Soft ambient depth behind the whole page - fixed so it never moves or repaints on scroll/re-render.
-           Royal purple + peacock teal + a whisper of gold, echoing Hera's iconography without leaning on clichés. */
+           Royal purple + peacock teal + a whisper of gold, echoing Hera's iconography without leaning on clichés.
+           Slightly richer/deeper than the previous pass so the hues read as intentional
+           jewel tones rather than a flat murky wash. */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             z-index: -1;
             background:
-                radial-gradient(60rem 34rem at 50% -10%, rgba(124, 58, 237, .17), transparent 60%),
-                radial-gradient(46rem 30rem at 92% 6%, rgba(20, 184, 166, .10), transparent 55%),
-                radial-gradient(38rem 26rem at 4% 20%, rgba(251, 191, 36, .045), transparent 60%),
-                #0c0814;
+                radial-gradient(60rem 34rem at 50% -8%, rgba(129, 64, 240, .20), transparent 62%),
+                radial-gradient(46rem 30rem at 96% 4%, rgba(20, 184, 166, .13), transparent 58%),
+                radial-gradient(40rem 28rem at 2% 16%, rgba(212, 175, 55, .06), transparent 60%),
+                radial-gradient(50rem 40rem at 50% 120%, rgba(76, 29, 149, .16), transparent 60%),
+                #0b0710;
             pointer-events: none;
         }
         .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -54,8 +81,8 @@
            a plain logo square, used once in the header. */
         .medallion {
             background: radial-gradient(circle at 32% 28%, #2dd4bf, #0f766e 70%);
-            border: 1.5px solid rgba(251, 191, 36, .55);
-            box-shadow: 0 0 0 3px rgba(251, 191, 36, .10), inset 0 1px 1px rgba(255,255,255,.3);
+            border: 1.5px solid rgba(212, 175, 55, .6);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, .12), inset 0 1px 1px rgba(255,255,255,.3);
         }
 
         /* A restrained Greek-key (meander) hairline - used sparingly as a single
@@ -123,12 +150,32 @@
         }
 
         .card {
-            background: linear-gradient(180deg, rgba(38, 30, 48, .6), rgba(21, 16, 27, .6));
-            border: 1px solid rgba(130, 105, 160, .22);
-            box-shadow: 0 1px 0 0 rgba(255,255,255,.04) inset, 0 12px 24px -12px rgba(0,0,0,.55);
+            background: linear-gradient(165deg, rgba(46, 34, 61, .62), rgba(23, 17, 30, .68));
+            border: 1px solid rgba(158, 130, 190, .20);
+            box-shadow: 0 1px 0 0 rgba(255,255,255,.05) inset, 0 14px 28px -14px rgba(0,0,0,.6);
             border-radius: 1.25rem;
+            transition: border-color .25s ease, transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease;
         }
-        .card-flat { background: #1b1522; border: 1px solid rgba(130, 105, 160, .25); border-radius: 1rem; }
+        .card:hover {
+            border-color: rgba(45, 212, 191, .30);
+            transform: translateY(-2px);
+            box-shadow: 0 1px 0 0 rgba(255,255,255,.05) inset, 0 18px 34px -14px rgba(0,0,0,.65);
+        }
+        .card-flat { background: #1b1522; border: 1px solid rgba(158, 130, 190, .22); border-radius: 1rem; }
+
+        /* Small uppercase eyebrow used to introduce a group of result cards,
+           echoing the header's meander divider without repeating the texture. */
+        .section-label {
+            display: flex; align-items: center; gap: .65rem;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+            color: rgba(212, 175, 55, .75);
+            margin: 0 .25rem .9rem;
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, rgba(212, 175, 55, .35), transparent);
+        }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -143,11 +190,11 @@
 <body>
 
     <!-- ===== TOP BAR ===== -->
-    <header class="sticky top-0 z-30 bg-[#0c0814]/90 backdrop-blur-md border-b border-[#3a2c4d]">
-        <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+    <header class="sticky top-0 z-30 bg-[#0b0710]/90 backdrop-blur-md border-b border-[#3a2c4d]">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
             <div class="flex items-center gap-2.5">
                 <div class="medallion w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-                    <span class="font-display font-bold text-amber-300 text-[14px]">H</span>
+                    <span class="font-display font-bold text-gold-300 text-[14px]">H</span>
                 </div>
                 <span class="font-display font-semibold text-zinc-50 text-[18px] tracking-wide">Hera</span>
             </div>
@@ -169,12 +216,12 @@
         </div>
         <div class="meander"></div>
         <div class="h-[2px] bg-[#1c1526] overflow-hidden">
-            <div id="progress-bar" class="h-full w-1/3 bg-gradient-to-r from-teal-500 to-amber-400 opacity-0"></div>
+            <div id="progress-bar" class="h-full w-1/3 bg-gradient-to-r from-teal-500 to-gold-400 opacity-0"></div>
         </div>
     </header>
 
     <!-- ===== MAIN ===== -->
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
 
         <!-- Search: large & centered on load, collapses into a compact bar on first scan -->
         <div id="hero-outer" class="flex flex-col items-center justify-center text-center" style="min-height:56vh;">
@@ -194,7 +241,7 @@
                     <input id="target" type="text" placeholder="name@domain.com, username or +33612345678" aria-label="Target to investigate: email, username or phone number"
                            class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-lg px-3.5 py-3.5">
                     <button id="search-btn" type="submit"
-                            class="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center gap-2.5 shrink-0 transition-all text-[15px] px-6 py-3.5 shadow-lg shadow-black/40 ring-1 ring-amber-400/25">
+                            class="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center gap-2.5 shrink-0 transition-all text-[15px] px-6 py-3.5 shadow-lg shadow-black/40 ring-1 ring-gold-400/25">
                         <i id="search-btn-icon" class="fa-solid fa-arrow-right"></i>
                         <span id="search-btn-label">Scan</span>
                     </button>
@@ -204,31 +251,38 @@
 
         <div id="dashboard" class="hidden pb-16">
 
-            <!-- Target + at-a-glance stats -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 max-w-3xl mx-auto">
-                <div id="target-summary" class="col-span-2 sm:col-span-1 card p-4"></div>
-                <div id="stats-summary" class="contents"></div>
+            <!-- Target + at-a-glance stats, laid out as one toolbar: identity on the
+                 left, the three stat tiles filling the remaining width so it reads as
+                 a single dashboard header instead of a cramped, narrow grid. -->
+            <div class="flex flex-col lg:flex-row gap-3.5 mb-6">
+                <div id="target-summary" class="card p-5 lg:w-[19rem] shrink-0"></div>
+                <div id="stats-summary" class="flex-1 grid grid-cols-3 gap-3.5"></div>
             </div>
 
             <!-- Export -->
-            <div id="export-bar" class="hidden max-w-3xl mx-auto mb-8 flex justify-end gap-2">
+            <div id="export-bar" class="hidden mb-8 flex justify-end gap-2">
                 <button type="button" onclick="exportMarkdown()" title="Export as Markdown"
                         class="bg-[#15101d] border border-[#3a2c4d] hover:border-teal-500/50 text-zinc-300 hover:text-teal-300 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-brands fa-markdown"></i> Markdown
                 </button>
                 <button type="button" onclick="exportPdf()" title="Export as PDF"
-                        class="bg-[#15101d] border border-[#3a2c4d] hover:border-amber-500/50 text-zinc-300 hover:text-amber-300 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                        class="bg-[#15101d] border border-[#3a2c4d] hover:border-gold-500/50 text-zinc-300 hover:text-gold-300 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-solid fa-file-pdf"></i> PDF
                 </button>
             </div>
 
             <!-- Results - fixed, ordered slots so cards are only ever appended into the
-                 right place as they're discovered, never wiped/rebuilt on each update. -->
-            <main class="space-y-5 max-w-3xl mx-auto" aria-live="polite">
+                 right place as they're discovered, never wiped/rebuilt on each update.
+                 Google/GitHub stay full-width feature banners; everything else flows
+                 into a responsive multi-column grid instead of a single narrow stack. -->
+            <main class="space-y-8" aria-live="polite">
                 <div id="slot-loading"></div>
                 <div id="slot-google"></div>
                 <div id="slot-github"></div>
-                <div id="slot-modules" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                <div id="slot-modules-wrap">
+                    <div id="slot-modules-label" class="section-label hidden"><i class="fa-solid fa-layer-group"></i> Modules &amp; sources</div>
+                    <div id="slot-modules" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start"></div>
+                </div>
                 <div id="slot-chips"></div>
                 <div id="slot-hudson"></div>
             </main>
@@ -283,7 +337,7 @@
                 <textarea id="ghunt-cookies" rows="8" placeholder="Paste base64-encoded credentials here..."
                           class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"></textarea>
                 <button type="button" id="ghunt-login-btn" onclick="submitGhuntLogin()"
-                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-amber-400/25">
+                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-gold-400/25">
                     <i id="ghunt-login-icon" class="fa-solid fa-right-to-bracket"></i>
                     <span id="ghunt-login-label">Authenticate</span>
                 </button>
@@ -313,7 +367,7 @@
                        class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
 
                 <button type="button" id="tg-send-code-btn" onclick="submitTelegramSendCode()"
-                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-amber-400/25">
+                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-gold-400/25">
                     <i id="tg-send-code-icon" class="fa-solid fa-paper-plane"></i>
                     <span id="tg-send-code-label">Send code</span>
                 </button>
@@ -324,7 +378,7 @@
                     <input id="tg-password" type="password" placeholder="2FA password (only if asked)"
                            class="w-full bg-[#15101d] border border-[#3a2c4d] rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/60 focus:ring-4 focus:ring-teal-500/10 transition-all">
                     <button type="button" id="tg-verify-btn" onclick="submitTelegramVerify()"
-                            class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-amber-400/25">
+                            class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-gold-400/25">
                         <i id="tg-verify-icon" class="fa-solid fa-check"></i>
                         <span id="tg-verify-label">Verify</span>
                     </button>
@@ -354,6 +408,7 @@
         ['slot-loading', 'slot-google', 'slot-github', 'slot-modules', 'slot-chips', 'slot-hudson'].forEach(id => {
             document.getElementById(id).innerHTML = '';
         });
+        document.getElementById('slot-modules-label').classList.add('hidden');
     }
 
     function hasAnyResults() {
@@ -572,7 +627,7 @@
         label.textContent = text;
         label.parentElement.className = `mono text-[11px] font-semibold hidden sm:flex items-center gap-2 mr-1 ${textClass || 'text-zinc-600'}`;
         dot.className = `w-1.5 h-1.5 rounded-full ${dotClass} ${running ? 'animate-pulse' : ''}`;
-        progress.className = running ? 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-amber-400 opacity-100 progress-run' : 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-amber-400 opacity-0';
+        progress.className = running ? 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-gold-400 opacity-100 progress-run' : 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-gold-400 opacity-0';
     }
 
     function setLoading(isLoading) {
@@ -607,7 +662,7 @@
         form.className = 'w-full max-w-md';
         searchIcon.className = 'fa-solid fa-magnifying-glass text-zinc-600 pl-3.5 text-sm';
         input.className = 'flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-sm px-2.5 py-2.5';
-        btn.className = 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5 ring-1 ring-amber-400/25';
+        btn.className = 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5 ring-1 ring-gold-400/25';
     }
 
     // Extracts success lines (✓ icon) from the raw stream and only keeps the ones that
@@ -696,13 +751,13 @@
         if (t.includes('PHONE')) return { icon: 'fa-solid fa-phone', ring: 'bg-teal-500/10 border-teal-500/25 text-teal-400', accent: '45,212,191' };
         if (t.includes('LEAKCHECK')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-400', accent: '248,113,113', favicon: 'https://leakcheck.io/favicon.ico' };
         if (t.includes('BREACH')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-400', accent: '248,113,113' };
-        return { icon: 'fa-solid fa-database', ring: 'bg-amber-500/10 border-amber-500/25 text-amber-400', accent: '251,191,36' };
+        return { icon: 'fa-solid fa-database', ring: 'bg-gold-500/10 border-gold-500/25 text-gold-400', accent: '212,175,55' };
     }
 
     function entryVisual(icon) {
         switch (icon) {
             case '✓': return { cls: 'text-emerald-400', ic: 'fa-solid fa-check' };
-            case '!': return { cls: 'text-amber-400', ic: 'fa-solid fa-triangle-exclamation' };
+            case '!': return { cls: 'text-gold-400', ic: 'fa-solid fa-triangle-exclamation' };
             case '×': return { cls: 'text-red-400', ic: 'fa-solid fa-xmark' };
             case '○': return { cls: 'text-zinc-600', ic: 'fa-solid fa-circle-minus' };
             default: return { cls: 'text-sky-400', ic: 'fa-solid fa-circle-dot' };
@@ -752,7 +807,7 @@
         return html;
     }
 
-    function renderModuleBlockCard(block) {
+    function renderModuleBlockCard(block, delayMs) {
         const vis = moduleVisual(block.title);
         let rows = '';
         block.entries.forEach(entry => {
@@ -776,22 +831,23 @@
             rows += `</div></div></div>`;
         });
 
-        return `<div class="reveal-in glow-in card p-6" style="--accent:${vis.accent};border-left:3px solid rgba(${vis.accent},.55)">
+        return `<div class="reveal-in glow-in card p-6" style="--accent:${vis.accent};border-left:3px solid rgba(${vis.accent},.55);animation-delay:${delayMs || 0}ms">
             ${cardHeader(vis.icon, vis.ring, block.title, null, vis.favicon)}
             <div>${rows}</div>
         </div>`;
     }
 
-    function renderChip(chip) {
+    function renderChip(chip, delayMs) {
         const href = chip.isUrl ? safeUrl(chip.value) : '';
         const arrow = chip.isUrl ? '<i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-zinc-600"></i>' : '';
         const inner = `
             <img src="${getFavicon(chip.domain)}" class="w-5 h-5 rounded" onerror="this.style.visibility='hidden'">
             <span class="text-[14px] text-zinc-300 font-medium">${escapeHtml(chip.key)}</span>
             ${arrow}`;
-        const cls = "chip-in bg-zinc-900 border border-zinc-800 px-4 py-2.5 rounded-full flex items-center gap-2.5 hover:border-amber-500/50 hover:-translate-y-0.5 transition-all";
-        if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${cls}">${inner}</a>`;
-        return `<div class="${cls}">${inner}</div>`;
+        const cls = "chip-in bg-zinc-900 border border-zinc-800 px-4 py-2.5 rounded-full flex items-center gap-2.5 hover:border-gold-500/50 hover:-translate-y-0.5 transition-all";
+        const style = ` style="animation-delay:${delayMs || 0}ms"`;
+        if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${cls}"${style}>${inner}</a>`;
+        return `<div class="${cls}"${style}>${inner}</div>`;
     }
 
     function emptyOrErrorCard(iconClass, iconWrapClass, title, titleClass, message) {
@@ -1166,9 +1222,9 @@
                                     <p class="mono text-[14px] text-zinc-300">${escapeHtml(ghCreated.split('T')[0])}</p>
                                 </div>
                             </div>
-                            <div class="rounded-xl p-4 border border-amber-500/25 bg-amber-500/[0.07] flex flex-col justify-center items-center text-center">
-                                <p class="mono text-[11px] text-amber-400 uppercase tracking-widest mb-1">Public repos</p>
-                                <p class="text-4xl font-extrabold text-amber-400 tracking-tight">${escapeHtml(ghRepo)}</p>
+                            <div class="rounded-xl p-4 border border-gold-500/25 bg-gold-500/[0.07] flex flex-col justify-center items-center text-center">
+                                <p class="mono text-[11px] text-gold-400 uppercase tracking-widest mb-1">Public repos</p>
+                                <p class="text-4xl font-extrabold text-gold-400 tracking-tight">${escapeHtml(ghRepo)}</p>
                             </div>
                         </div>
                         ${ghUrl ? `
@@ -1194,6 +1250,13 @@
         const blocks = parseModuleBlocks(logs).filter(b => {
             const upper = b.title.toUpperCase();
             if (skipTitles.some(s => upper.includes(s))) return false;
+            // GHunt found nothing for this target - the dedicated Google Identity
+            // card only renders on a hit (step 1), so a bare "Not found" here
+            // would otherwise surface as its own near-empty rectangle. Drop it
+            // instead; other GHunt diagnostics (auth needed, tool errors, etc.)
+            // still show, since those are actionable for the user.
+            if (upper.includes('GOOGLE IDENTITY') &&
+                b.entries.some(e => /google account/i.test(e.key) && /not found/i.test(e.value))) return false;
             return b.entries.some(e => e.icon !== '✓' || e.subs.length > 0);
         });
 
@@ -1201,8 +1264,10 @@
         blocks.forEach(block => {
             if (renderedKeys.modules.has(block.title)) return;
             renderedKeys.modules.add(block.title);
-            modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block));
+            const delay = modulesSlot.children.length * 70;
+            modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block, delay));
         });
+        document.getElementById('slot-modules-label').classList.toggle('hidden', modulesSlot.children.length === 0);
 
         // --- 4. SOCIAL MEDIA / CONNECTED SERVICES ---
         const chips = parseServiceChips(logs);
@@ -1220,7 +1285,8 @@
             chips.forEach(chip => {
                 if (renderedKeys.chips.has(chip.key)) return;
                 renderedKeys.chips.add(chip.key);
-                chipsList.insertAdjacentHTML('beforeend', renderChip(chip));
+                const delay = chipsList.children.length * 40;
+                chipsList.insertAdjacentHTML('beforeend', renderChip(chip, delay));
             });
             const countEl = document.getElementById('chips-count');
             if (countEl) countEl.textContent = `${chips.length} found`;
