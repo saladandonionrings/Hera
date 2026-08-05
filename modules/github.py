@@ -54,8 +54,8 @@ class GitHubScanner:
             p = requests.get(profile_url, headers=self.headers, timeout=10).json()
             
             if 'login' in p:
-                console.module_header("GITHUB DEEP ANALYSIS")
-                console.success("GitHub Profile", username)
+                console.module_header("GITHUB")
+                console.success("Profile", username)
                 
                 console.info("Full Name", p.get('name', 'Private'))
                 console.info("Location", p.get('location', 'Unknown'))

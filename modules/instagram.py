@@ -41,7 +41,7 @@ class InstagramScanner:
         if not user:
             return False
 
-        console.module_header("INSTAGRAM DEEP ANALYSIS")
+        console.module_header("INSTAGRAM")
         console.success("Instagram Profile", f"https://www.instagram.com/{self.username}/")
 
         full_name = user.get("full_name")
@@ -74,6 +74,6 @@ class InstagramScanner:
 
         avatar = user.get("profile_pic_url_hd") or user.get("profile_pic_url")
         if avatar:
-            console.info("Avatar", avatar)
+            console.info("", avatar)
 
         return True

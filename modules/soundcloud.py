@@ -23,7 +23,7 @@ class SoundCloudScanner:
         try:
             res = self.session.get(self.url, headers=self.headers, timeout=15)
         except Exception as e:
-            console.error("SoundCloud Scraper", str(e))
+            console.error("SoundCloud", str(e))
             return False
 
         if res.status_code != 200:
@@ -45,8 +45,8 @@ class SoundCloudScanner:
         if not user_data:
             return False
 
-        console.module_header("SOUNDCLOUD DEEP ANALYSIS")
-        console.success("SoundCloud Profile", self.url)
+        console.module_header("SOUNDCLOUD")
+        console.success("URL", self.url)
 
         display_name = user_data.get("full_name") or user_data.get("username")
         if display_name:

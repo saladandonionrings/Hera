@@ -6,9 +6,6 @@ import tempfile
 
 from core.display import console
 
-# Maigret's own site database ships checks that are known to misfire and
-# claim a "found" account for almost any username (broken detection logic,
-# generic error pages, aggressive anti-bot walls, etc).
 FALSE_POSITIVE_SITES = {
     "chaturbate",
     "tinkoff invest",
@@ -16,13 +13,6 @@ FALSE_POSITIVE_SITES = {
     "reverbnation",
 }
 
-# Sites already checked by a dedicated Hera module in the username workflow
-# (modules/blackbird.py's target list, plus the individual scanners wired up
-# in main.py's username branch) - excluded here so the same account isn't
-# reported twice under two different module names. Verified against the
-# exact URL each maigret site check hits, not just by name, since some
-# maigret entries look similar but point elsewhere (e.g. "GeniusArtists" vs
-# "Genius", "NPM-Package" vs "NPM").
 ALREADY_COVERED_SITES = {
     "instagram", "twitter", "snapchat", "tiktok", "telegram", "mastodon.social",
     "reddit", "github", "keybase", "replit", "bugcrowd", "twitch", "kick",
@@ -35,16 +25,8 @@ ALREADY_COVERED_SITES = {
     "picsart", "trello", "youtube",
 }
 
-# Exact site names as they appear in maigret's data.json - kept lowercase
-# for a case-insensitive match since the upstream database can be
-# auto-updated independently of Hera and occasionally tweaks casing.
 EXCLUDED_SITES = FALSE_POSITIVE_SITES | ALREADY_COVERED_SITES
 
-# Cache of whether the installed `maigret` build accepts --no-autoupdate,
-# probed once per process instead of assumed - the flag isn't present in
-# every published version, and a hardcoded assumption broke the whole scan
-# outright (argparse rejects unknown flags before running anything) on an
-# install whose CLI predates it.
 _supports_no_autoupdate = None
 
 
@@ -89,10 +71,6 @@ class MaigretScanner:
                 "--timeout", "15",
                 "--no-progressbar",
                 "--no-color",
-                # Both needed so a fully-blocked run (proxy/firewall eating
-                # every request) can be told apart from a clean scan that
-                # genuinely found nothing - by default maigret only prints
-                # claimed sites.
                 "--print-errors",
                 "--print-not-found",
             ]
