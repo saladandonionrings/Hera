@@ -1,6 +1,30 @@
 import requests
+from bs4 import BeautifulSoup
 from core.display import console
-import uuid  
+import uuid
+
+
+# Obviously generic/placeholder images aren't worth surfacing as "the
+# user's profile picture" - skip them rather than showing a site's default
+# silhouette avatar for every unclaimed-looking profile.
+AVATAR_SKIP_MARKERS = ("default", "placeholder", "favicon", "sprite", "avatar_anonymous")
+
+
+def _extract_avatar(html):
+    """Best-effort profile picture pull from a fetched page's og:image /
+    twitter:image meta tags - the same fields most sites already set for
+    link-preview cards, so no site-specific scraping needed."""
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+    except Exception:
+        return None
+    tag = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "twitter:image"})
+    if not tag:
+        return None
+    url = tag.get("content")
+    if not url or any(marker in url.lower() for marker in AVATAR_SKIP_MARKERS):
+        return None
+    return url
 
 
 class BlackbirdScanner:
@@ -45,11 +69,14 @@ class BlackbirdScanner:
             # instagram.com's own API instead of a third-party proxy.
             ("X (Twitter)", f"https://nitter.net/{self.username}", "nitter_check", None),
             ("Snapchat", f"https://www.snapchat.com/add/{self.username}", "text_present", "og:title"),
-            ("TikTok", f"https://www.tiktok.com/@{self.username}", "text_not_present", "Couldn't find this account"),
+            # TikTok is not checked here either - TikTokScanner (deep
+            # analysis module) is the sole source for it.
             ("Telegram", f"https://t.me/{self.username}", "text_present", "tgme_page_extra"),
             ("Mastodon", f"https://mastodon.social/@{self.username}", "status", 200),
             ("Gab", f"https://gab.com/{self.username}", "text_present", 'property="og:type" content="profile"'),
-            ("Reddit", f"https://www.reddit.com/user/{self.username}", "text_not_present", "nobody on Reddit goes by that name"),
+            # Reddit is not checked here either - RedditScanner (deep
+            # analysis module, pulls post/comment history from
+            # deletedby.com) is the sole source for it.
 
             # --- cyber/dev ---
             ("GitHub", f"https://api.github.com/users/{self.username}", "github_api_check", None),
@@ -100,13 +127,22 @@ class BlackbirdScanner:
             ("BuyMeACoffee", f"https://www.buymeacoffee.com/{self.username}", "text_not_present", "couldn't find that page"),
             ("Patreon", f"https://www.patreon.com/{self.username}", "status", 200),
             ("Gravatar", f"http://en.gravatar.com/{self.username}.json", "text_present", '"profileUrl"'),
-            ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "response_url", "user-not-found")
+            ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "response_url", "user-not-found"),
+
+            # --- gaming, video ---
+            ("PSNProfiles", f"https://psnprofiles.com/{self.username}", "text_not_present", "This player could not be found"),
+            ("Xbox", f"https://www.xbox.com/en-US/play/user/{self.username}", "status", 200),
+            ("VLR.gg", f"https://www.vlr.gg/user/{self.username}", "text_not_present", "Page Not Found"),
+            ("JeuxVideo.com", f"https://www.jeuxvideo.com/profil/{self.username}", "text_not_present", "Profil introuvable"),
+            ("Dailymotion", f"https://www.dailymotion.com/{self.username}", "status", 200),
+            ("BandLab", f"https://www.bandlab.com/{self.username}", "status", 200),
         ]
 
         found_any = False
         github_found = False
+        avatars = []
         session = requests.Session()
-        
+
         for site, url, check_type, check_val in targets:
             try:
                 res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
@@ -176,14 +212,35 @@ class BlackbirdScanner:
                     final_url = url
                     if site == "GitHub": final_url = f"https://github.com/{self.username}/"
                     if site == "X (Twitter)": final_url = f"https://x.com/{self.username}"
-                    
+
                     console.success(site, final_url)
                     found_any = True
 
+                    if check_type == "github_api_check":
+                        try:
+                            avatar_url = res.json().get("avatar_url")
+                        except Exception:
+                            avatar_url = None
+                    elif check_type == "nitter_check":
+                        # The page that actually matched is test_res (one of
+                        # several mirror instances tried above), not the
+                        # outer res, which is still nitter.net's own response.
+                        avatar_url = _extract_avatar(test_res.text)
+                    else:
+                        avatar_url = _extract_avatar(res.text)
+
+                    if avatar_url:
+                        avatars.append((site, avatar_url))
+
             except Exception:
                 continue
-        
+
         if not found_any:
             console.failure("Profiles", f"No profiles found for '{self.username}'")
+
+        if avatars:
+            console.module_header("PROFILE PICTURES")
+            for site, avatar_url in avatars:
+                console.info(f"{site} Avatar", avatar_url)
             
         return github_found

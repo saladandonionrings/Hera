@@ -747,6 +747,7 @@
 
     function moduleVisual(title) {
         const t = title.toUpperCase();
+        if (t.includes('PROFILE PICTURES')) return { icon: 'fa-solid fa-images', ring: 'bg-bronze-500/10 border-bronze-500/25 text-bronze-600', accent: '157,101,48' };
         if (t.includes('PROTON')) return { icon: 'fa-solid fa-lock', ring: 'bg-violet-500/10 border-violet-500/25 text-violet-600', accent: '124,58,237', favicon: 'https://proton.me/favicon.ico' };
         if (t.includes('WORDPRESS') || t.includes('GRAVATAR')) return { icon: 'fa-brands fa-wordpress', ring: 'bg-sky-500/10 border-sky-500/25 text-sky-600', accent: '2,132,199' };
         if (t.includes('SNAPCHAT')) return { icon: 'fa-brands fa-snapchat', ring: 'bg-yellow-400/10 border-yellow-400/25 text-yellow-600', accent: '202,138,4' };
@@ -755,6 +756,8 @@
         if (t.includes('INSTAGRAM')) return { icon: 'fa-brands fa-instagram', ring: 'bg-fuchsia-500/10 border-fuchsia-500/25 text-fuchsia-600', accent: '192,38,211' };
         if (t.includes('SOUNDCLOUD')) return { icon: 'fa-brands fa-soundcloud', ring: 'bg-orange-500/10 border-orange-500/25 text-orange-600', accent: '234,88,12' };
         if (t.includes('YOUTUBE')) return { icon: 'fa-brands fa-youtube', ring: 'bg-red-500/10 border-red-500/25 text-red-600', accent: '220,38,38' };
+        if (t.includes('TIKTOK')) return { icon: 'fa-brands fa-tiktok', ring: 'bg-stone-900/10 border-stone-900/25 text-stone-900', accent: '28,25,23' };
+        if (t.includes('REDDIT')) return { icon: 'fa-brands fa-reddit-alien', ring: 'bg-orange-600/10 border-orange-600/25 text-orange-700', accent: '215,89,26' };
         if (t.includes('GOOGLE')) return { icon: 'fa-brands fa-google', ring: 'bg-indigo-500/10 border-indigo-500/25 text-indigo-600', accent: '79,70,229' };
         if (t.includes('PHONE')) return { icon: 'fa-solid fa-phone', ring: 'bg-teal-500/10 border-teal-500/25 text-teal-700', accent: '15,118,110' };
         if (t.includes('LEAKCHECK')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-600', accent: '220,38,38', favicon: 'https://leakcheck.io/favicon.ico' };
@@ -786,21 +789,39 @@
     // under the picture) - pulled out of the normal row list entirely and
     // shown as a framed thumbnail up front instead, before anything else.
     // A blank key (used when a module has nothing meaningful to caption the
-    // picture with) plus a URL value counts too, so a module doesn't need a
-    // name from this fixed list just to get the same treatment.
+    // picture with) plus a URL value counts too, and so does any "X Avatar"
+    // key (used when a single block collects avatars from several
+    // different sites, e.g. blackbird's "PROFILE PICTURES" gallery, and
+    // needs a caption to say which is which) - so a module doesn't need a
+    // name from the fixed list just to get the same treatment.
     const AVATAR_FIELD_KEYS = new Set(['avatar', 'avatar url', 'profile picture', 'profile pic', 'photo url', 'snapcode url', 'bitmoji 3d']);
 
     function isAvatarEntry(entry) {
-        return AVATAR_FIELD_KEYS.has(entry.key.toLowerCase()) ||
-            (!entry.key.trim() && /^https?:\/\//i.test(entry.value));
+        const key = entry.key.trim();
+        return AVATAR_FIELD_KEYS.has(key.toLowerCase()) ||
+            (!key && /^https?:\/\//i.test(entry.value)) ||
+            (/\bavatar$/i.test(key) && /^https?:\/\//i.test(entry.value));
     }
 
-    function renderAvatarHero(value) {
+    // The caption under a gallery thumbnail - "GitHub Avatar" -> "GitHub",
+    // blank/plain "Avatar" -> no caption (redundant next to a card whose
+    // header already says what it is).
+    function avatarLabel(entry) {
+        return entry.key.trim().replace(/\s*avatar$/i, '').trim();
+    }
+
+    function renderAvatarHero(value, label) {
         const src = safeUrl(value);
         if (!src) return '';
-        return `<a href="${src}" target="_blank" rel="noopener noreferrer" class="block rounded-2xl border border-[#e4d7bb] overflow-hidden bg-stone-100 hover:border-teal-600/50 transition-colors shadow-sm shrink-0">
-            <img src="${src}" alt="" class="w-24 h-24 object-cover block" onerror="this.parentElement.style.display='none'">
-        </a>`;
+        const caption = label
+            ? `<span class="block mt-1 text-center text-[10px] text-zinc-500 truncate max-w-[6rem]">${escapeHtml(label)}</span>`
+            : '';
+        return `<div class="flex flex-col items-center shrink-0">
+            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block rounded-2xl border border-[#e4d7bb] overflow-hidden bg-stone-100 hover:border-teal-600/50 transition-colors shadow-sm">
+                <img src="${src}" alt="" class="w-24 h-24 object-cover block" onerror="this.closest('div').style.display='none'">
+            </a>
+            ${caption}
+        </div>`;
     }
 
     function cardHeader(icon, iconWrap, title, subtitle, faviconUrl, titleClass) {
@@ -846,7 +867,7 @@
         // to fall in the field order.
         const avatarEntries = block.entries.filter(isAvatarEntry);
         const otherEntries = block.entries.filter(e => !isAvatarEntry(e));
-        const avatarThumbs = avatarEntries.map(e => renderAvatarHero(e.value)).filter(Boolean);
+        const avatarThumbs = avatarEntries.map(e => renderAvatarHero(e.value, avatarLabel(e))).filter(Boolean);
         const avatarHtml = avatarThumbs.length
             ? `<div class="flex justify-center flex-wrap gap-3 mb-5">${avatarThumbs.join('')}</div>`
             : '';
