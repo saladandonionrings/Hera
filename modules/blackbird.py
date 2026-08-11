@@ -177,7 +177,10 @@ class BlackbirdScanner:
                     if res.status_code == 200 and "404 Not Found" not in res.text and "This page isn't available" not in res.text:
                         is_found = True
                 elif check_type == "pinterest_custom_check":
-                    if res.status_code == 200 and "show_error=true" not in res.url and "Nous ne trouvons pas cette idée" not in res.text:
+                    # A missing account redirects (via allow_redirects) to
+                    # pinterest.com/?show_error=true - that's the reliable
+                    # signal, not page text (which varies by locale).
+                    if res.status_code == 200 and "show_error=true" not in res.url:
                         is_found = True
                 elif check_type == "nitter_check":
                     instances = [f"https://nitter.net/{self.username}", f"https://nitter.cz/{self.username}", f"https://nitter.it/{self.username}"]

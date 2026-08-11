@@ -27,6 +27,7 @@ from modules import (
     YouTubeScanner,
     TikTokScanner,
     RedditScanner,
+    GumroadScanner,
     WordPressEmailScanner,
     FacebookScanner,
     LeboncoinScanner,
@@ -145,7 +146,8 @@ class EpeiosPro:
                     ("xvideos.com", XvideosScanner()),
                     ("twitter.com", TwitterScanner()),
                     ("academia.edu", AcademiaScanner()),
-                    ("imageshack.com", ImageshackScanner())
+                    ("imageshack.com", ImageshackScanner()),
+                    ("gumroad.com", GumroadScanner())
                 ]
 
                 isp = ISPScanner()
