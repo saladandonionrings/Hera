@@ -278,12 +278,14 @@
 
             <!-- Results - fixed, ordered slots so cards are only ever appended into the
                  right place as they're discovered, never wiped/rebuilt on each update.
-                 Google/GitHub stay full-width feature banners; everything else flows
-                 into a responsive multi-column grid instead of a single narrow stack. -->
+                 Google stays a full-width feature banner; slot-aggregates rolls up
+                 avatars/names/locations cross-referenced from every card found so
+                 far; everything else flows into a responsive multi-column grid
+                 instead of a single narrow stack. -->
             <main class="space-y-8" aria-live="polite">
                 <div id="slot-loading"></div>
                 <div id="slot-google"></div>
-                <div id="slot-github"></div>
+                <div id="slot-aggregates"></div>
                 <div id="slot-modules-wrap">
                     <div id="slot-modules-label" class="section-label hidden"><i class="fa-solid fa-layer-group"></i> Modules &amp; sources</div>
                     <div id="slot-modules" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start"></div>
@@ -406,18 +408,18 @@
     // Tracks what's already been rendered for the CURRENT scan, so streamed
     // updates only ever insert what's new instead of wiping and rebuilding
     // everything (which is what caused the "page refresh" flicker).
-    let renderedKeys = { google: false, github: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set() };
+    let renderedKeys = { google: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set(), aggSignature: '' };
 
     function resetRenderState() {
-        renderedKeys = { google: false, github: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set() };
-        ['slot-loading', 'slot-google', 'slot-github', 'slot-modules', 'slot-chips', 'slot-hudson'].forEach(id => {
+        renderedKeys = { google: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set(), aggSignature: '' };
+        ['slot-loading', 'slot-google', 'slot-aggregates', 'slot-modules', 'slot-chips', 'slot-hudson'].forEach(id => {
             document.getElementById(id).innerHTML = '';
         });
         document.getElementById('slot-modules-label').classList.add('hidden');
     }
 
     function hasAnyResults() {
-        return renderedKeys.google || renderedKeys.github || renderedKeys.hudson ||
+        return renderedKeys.google || renderedKeys.hudson ||
                renderedKeys.modules.size > 0 || renderedKeys.chips.size > 0;
     }
 
@@ -719,7 +721,15 @@
             }
             if (!current) continue;
 
-            const entryMatch = line.match(/^\s{2}([•✓!×○])\s+(.+)$/);
+            // The fixed 2-space gap right after the icon (mirroring
+            // core/display.py's `f"  {icon}  {key}..."`) must be matched
+            // literally, not with a greedy \s+: when key is blank (the
+            // avatar-URL convention), everything between the icon and the
+            // value is pure padding whitespace, and a greedy \s+ would eat
+            // all of it - including the padding that's supposed to signal
+            // "there was no key here" - leaving no separator for the
+            // key/value split below to find.
+            const entryMatch = line.match(/^\s{2}([•✓!×○])\s{2}(.*)$/);
             if (entryMatch) {
                 const rest = entryMatch[2];
                 const parts = rest.match(/^(.+?)\s{2,}(.+)$/);
@@ -748,6 +758,7 @@
     function moduleVisual(title) {
         const t = title.toUpperCase();
         if (t.includes('PROFILE PICTURES')) return { icon: 'fa-solid fa-images', ring: 'bg-bronze-500/10 border-bronze-500/25 text-bronze-600', accent: '157,101,48' };
+        if (t === 'GITHUB') return { icon: 'fa-brands fa-github', ring: 'bg-stone-900/10 border-stone-900/25 text-stone-900', accent: '28,25,23' };
         if (t.includes('PROTON')) return { icon: 'fa-solid fa-lock', ring: 'bg-violet-500/10 border-violet-500/25 text-violet-600', accent: '124,58,237', favicon: 'https://proton.me/favicon.ico' };
         if (t.includes('WORDPRESS') || t.includes('GRAVATAR')) return { icon: 'fa-brands fa-wordpress', ring: 'bg-sky-500/10 border-sky-500/25 text-sky-600', accent: '2,132,199' };
         if (t.includes('SNAPCHAT')) return { icon: 'fa-brands fa-snapchat', ring: 'bg-yellow-400/10 border-yellow-400/25 text-yellow-600', accent: '202,138,4' };
@@ -860,6 +871,34 @@
         return html;
     }
 
+    // A single •/✓/!/×/○ field row - extracted so both the always-visible
+    // rows and the collapsed "+N more fields" section below can share it.
+    function renderFieldRow(entry) {
+        const ev = entryVisual(entry.icon);
+        const isTagList = entry.key.toLowerCase() === 'breaches';
+        let html = `<div class="py-3.5 border-b border-[#ece1c6] last:border-0">
+            <div class="flex items-start gap-3">
+                <i class="${ev.ic} ${ev.cls} text-sm mt-0.5 shrink-0 w-4 text-center"></i>
+                <div class="min-w-0 flex-1">
+                    <span class="mono text-[11px] uppercase tracking-wider text-zinc-500">${escapeHtml(entry.key)}</span>
+                    ${isTagList
+                        ? renderTagList(entry.value, 'bg-red-500/10 border border-red-500/20 text-red-700')
+                        : `<div class="text-[15px] text-stone-800 mt-0.5">${renderValue(entry.value)}</div>`}`;
+        if (entry.subs.length) {
+            html += `<div class="mt-2.5 space-y-1.5 border-l-2 border-[#ece1c6] pl-3">`;
+            entry.subs.forEach(sub => {
+                html += `<div class="text-[13px]"><span class="text-zinc-500">${escapeHtml(sub.key)}</span> <span class="text-zinc-400">—</span> <span class="text-stone-600">${renderValue(sub.value)}</span></div>`;
+            });
+            html += `</div>`;
+        }
+        html += `</div></div></div>`;
+        return html;
+    }
+
+    // Fields beyond this count collapse behind a "+N more fields" toggle so a
+    // module with a dozen data points doesn't dwarf every card around it.
+    const VISIBLE_FIELD_COUNT = 4;
+
     function renderModuleBlockCard(block, delayMs) {
         const vis = moduleVisual(block.title);
 
@@ -867,39 +906,127 @@
         // hero image above everything else, instead of wherever they happen
         // to fall in the field order.
         const avatarEntries = block.entries.filter(isAvatarEntry);
-        const otherEntries = block.entries.filter(e => !isAvatarEntry(e));
+        let otherEntries = block.entries.filter(e => !isAvatarEntry(e));
         const avatarThumbs = avatarEntries.map(e => renderAvatarHero(e.value, avatarLabel(e))).filter(Boolean);
         const avatarHtml = avatarThumbs.length
             ? `<div class="flex justify-center flex-wrap gap-3 mb-5">${avatarThumbs.join('')}</div>`
             : '';
 
-        let rows = '';
-        otherEntries.forEach(entry => {
-            const ev = entryVisual(entry.icon);
-            const isTagList = entry.key.toLowerCase() === 'breaches';
-            rows += `<div class="py-3.5 border-b border-[#ece1c6] last:border-0">
-                <div class="flex items-start gap-3">
-                    <i class="${ev.ic} ${ev.cls} text-sm mt-0.5 shrink-0 w-4 text-center"></i>
-                    <div class="min-w-0 flex-1">
-                        <span class="mono text-[11px] uppercase tracking-wider text-zinc-500">${escapeHtml(entry.key)}</span>
-                        ${isTagList
-                            ? renderTagList(entry.value, 'bg-red-500/10 border border-red-500/20 text-red-700')
-                            : `<div class="text-[15px] text-stone-800 mt-0.5">${renderValue(entry.value)}</div>`}`;
-            if (entry.subs.length) {
-                rows += `<div class="mt-2.5 space-y-1.5 border-l-2 border-[#ece1c6] pl-3">`;
-                entry.subs.forEach(sub => {
-                    rows += `<div class="text-[13px]"><span class="text-zinc-500">${escapeHtml(sub.key)}</span> <span class="text-zinc-400">—</span> <span class="text-stone-600">${renderValue(sub.value)}</span></div>`;
-                });
-                rows += `</div>`;
+        // A name field and a profile URL (the first ✓ line pointing at an
+        // http(s) link) get pulled out too and headlined above the rest of
+        // the fields, the way every other card in the app leads with who/what
+        // it found rather than burying it as just another row.
+        let nameEntry = null, urlEntry = null;
+        otherEntries = otherEntries.filter(e => {
+            const key = e.key.trim();
+            const value = e.value.trim();
+            if (!nameEntry && /name$/i.test(key) && value && !/^(none|private|unknown)$/i.test(value)) {
+                nameEntry = e;
+                return false;
             }
-            rows += `</div></div></div>`;
+            if (!urlEntry && e.icon === '✓' && /^https?:\/\//i.test(value)) {
+                urlEntry = e;
+                return false;
+            }
+            return true;
         });
+
+        const headlineHtml = (nameEntry || urlEntry)
+            ? `<div class="text-center mb-5">
+                ${nameEntry ? `<p class="text-[17px] font-bold text-stone-900 tracking-tight break-words">${escapeHtml(nameEntry.value)}</p>` : ''}
+                ${urlEntry ? `<div class="mt-1 text-[13px] break-all">${renderValue(urlEntry.value)}</div>` : ''}
+            </div>`
+            : '';
+
+        const visibleEntries = otherEntries.slice(0, VISIBLE_FIELD_COUNT);
+        const extraEntries = otherEntries.slice(VISIBLE_FIELD_COUNT);
+        const rows = visibleEntries.map(renderFieldRow).join('');
+
+        let extraHtml = '';
+        if (extraEntries.length) {
+            extraHtml = `<details class="group ${rows ? 'border-t border-[#ece1c6]' : ''} mt-1">
+                <summary class="list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 py-3 cursor-pointer text-[13px] font-medium text-teal-700 hover:text-teal-600 select-none">
+                    <i class="fa-solid fa-chevron-right text-[10px] transition-transform group-open:rotate-90"></i>
+                    <span>+${extraEntries.length} more field${extraEntries.length > 1 ? 's' : ''}</span>
+                </summary>
+                <div>${extraEntries.map(renderFieldRow).join('')}</div>
+            </details>`;
+        }
 
         return `<div class="reveal-in glow-in card p-6" style="--accent:${vis.accent};border-left:3px solid rgba(${vis.accent},.55);animation-delay:${delayMs || 0}ms">
             ${cardHeader(vis.icon, vis.ring, block.title, null, vis.favicon)}
             ${avatarHtml}
+            ${headlineHtml}
             <div>${rows}</div>
+            ${extraHtml}
         </div>`;
+    }
+
+    // --- Aggregate summary cards (profile pictures / names / locations found
+    // across every module block, mirrored regardless of skipTitles so a
+    // block like blackbird's own "PROFILE PICTURES" gallery or a not-found
+    // Google Identity block can still contribute its avatar/name to the
+    // cross-site summary even where it's not shown as its own per-site card).
+    function collectAggregates(logs) {
+        const blocks = parseModuleBlocks(logs);
+        const avatars = new Map(); // safe src -> caption
+        const names = new Set();
+        const locations = new Set();
+
+        blocks.forEach(block => {
+            block.entries.forEach(entry => {
+                if (isAvatarEntry(entry)) {
+                    const src = safeUrl(entry.value);
+                    if (src && !avatars.has(src)) {
+                        avatars.set(src, avatarLabel(entry) || block.title);
+                    }
+                    return;
+                }
+                const key = entry.key.trim();
+                const value = entry.value.trim();
+                if (!value) return;
+                if (/name$/i.test(key) && !/^(none|private|unknown)$/i.test(value)) {
+                    names.add(value);
+                } else if (/^(location|region)$/i.test(key) && !/^unknown$/i.test(value)) {
+                    locations.add(value);
+                }
+            });
+        });
+
+        return { avatars, names: [...names], locations: [...locations] };
+    }
+
+    function renderAggregateTags(items, tagClass) {
+        return `<div class="flex flex-wrap gap-1.5">${items.map(v =>
+            `<span class="text-[12.5px] font-medium ${tagClass} rounded-lg px-2.5 py-1">${escapeHtml(v)}</span>`
+        ).join('')}</div>`;
+    }
+
+    function renderAggregateCards(agg) {
+        const cards = [];
+
+        if (agg.avatars.size > 0) {
+            const thumbs = [...agg.avatars.entries()].map(([src, label]) => renderAvatarHero(src, label)).join('');
+            cards.push(`<div class="reveal-in card p-6">
+                ${cardHeader('fa-solid fa-images', 'bg-bronze-500/10 border-bronze-500/25 text-bronze-600', 'Profile pictures', `${agg.avatars.size} found`)}
+                <div class="flex flex-wrap gap-3">${thumbs}</div>
+            </div>`);
+        }
+        if (agg.names.length > 0) {
+            cards.push(`<div class="reveal-in card p-6">
+                ${cardHeader('fa-solid fa-signature', 'bg-teal-500/10 border-teal-500/25 text-teal-700', 'Names', `${agg.names.length} found`)}
+                ${renderAggregateTags(agg.names, 'bg-teal-500/10 border border-teal-500/20 text-teal-700')}
+            </div>`);
+        }
+        if (agg.locations.length > 0) {
+            cards.push(`<div class="reveal-in card p-6">
+                ${cardHeader('fa-solid fa-location-dot', 'bg-indigo-500/10 border-indigo-500/25 text-indigo-600', 'Locations', `${agg.locations.length} found`)}
+                ${renderAggregateTags(agg.locations, 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-700')}
+            </div>`);
+        }
+
+        if (!cards.length) return '';
+        return `<div class="grid grid-cols-1 md:grid-cols-3 gap-5">${cards.join('')}</div>`;
     }
 
     function renderChip(chip, delayMs) {
@@ -1252,64 +1379,20 @@
             renderedKeys.google = true;
         }
 
-        // --- 2. GITHUB DEEP ANALYSIS (kept in English, matches the backend header text) ---
-        if (!renderedKeys.github && logs.includes("GITHUB DEEP ANALYSIS")) {
-            const ghProfile = logs.match(/GitHub Profile\s+(.*)/)?.[1]?.trim() || "N/A";
-            const ghName = logs.match(/Full Name\s+(.*)/)?.[1]?.trim() || "N/A";
-            const ghRepo = logs.match(/Public Repos\s+(.*)/)?.[1]?.trim() || "0";
-            const ghBio = logs.match(/Bio\s+(.*)/)?.[1]?.trim() || "No bio information found";
-            const ghCreated = logs.match(/Created on\s+(.*)/)?.[1]?.trim() || "N/A";
-            const harvested = [...logs.matchAll(/└\s+(\S+@\S+)\s{2,}(.+)/g)]
-                .map(m => ({ email: m[1].trim(), name: m[2].trim() }));
-
-            const ghUrl = ghProfile && ghProfile !== "N/A" ? safeUrl(`https://github.com/${encodeURIComponent(ghProfile)}`) : '';
-            const ghSubtitle = ghUrl
-                ? `<a href="${ghUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-teal-300 hover:underline">${escapeHtml(ghProfile)}</a>`
-                : escapeHtml(ghProfile);
-
-            document.getElementById('slot-github').innerHTML = `
-                <div class="reveal-in glow-in rounded-2xl p-7 sm:p-8 relative overflow-hidden border border-zinc-800 scroll-mt-24" style="background:#0d1117;--accent:255,255,255">
-                    <i class="fa-brands fa-github absolute -right-4 -top-4 text-8xl text-white/[0.03] pointer-events-none"></i>
-                    <div class="relative z-10">
-                        ${cardHeader('fa-brands fa-github', 'bg-white/5 border-white/15 text-white', 'GitHub Intelligence', ghSubtitle, null, 'text-white')}
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                            <div class="md:col-span-2">
-                                <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-2">Biography</p>
-                                <p class="text-[14px] text-zinc-300 leading-relaxed bg-white/[0.03] p-4 rounded-xl border border-white/5 break-words">${escapeHtml(ghBio)}</p>
-                            </div>
-                            <div class="space-y-4">
-                                <div>
-                                    <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-1">Display name</p>
-                                    <p class="text-[14px] text-white font-semibold break-words">${escapeHtml(ghName)}</p>
-                                </div>
-                                <div>
-                                    <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-1">Account age</p>
-                                    <p class="mono text-[14px] text-zinc-300">${escapeHtml(ghCreated.split('T')[0])}</p>
-                                </div>
-                            </div>
-                            <div class="rounded-xl p-4 border border-bronze-500/25 bg-bronze-500/[0.07] flex flex-col justify-center items-center text-center">
-                                <p class="mono text-[11px] text-bronze-500 uppercase tracking-widest mb-1">Public repos</p>
-                                <p class="text-4xl font-extrabold text-bronze-500 tracking-tight">${escapeHtml(ghRepo)}</p>
-                            </div>
-                        </div>
-                        ${ghUrl ? `
-                        <div class="flex flex-wrap gap-5 mt-5 text-[13px] font-semibold">
-                            <a href="${ghUrl}" target="_blank" rel="noopener noreferrer" class="text-white hover:text-zinc-300 flex items-center gap-1.5"><i class="fa-brands fa-github"></i> View on GitHub</a>
-                        </div>` : ''}
-                        ${harvested.length ? `
-                        <div class="mt-6 pt-5 border-t border-zinc-800">
-                            <p class="mono text-[11px] text-zinc-500 uppercase tracking-widest mb-3">Emails found in Git history (${harvested.length})</p>
-                            <div class="flex flex-wrap gap-2">
-                                ${harvested.map(h => `<span class="mono text-[12px] bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-zinc-300">${escapeHtml(h.email)} <span class="text-zinc-600">· ${escapeHtml(h.name)}</span></span>`).join('')}
-                            </div>
-                        </div>` : ''}
-                    </div>
-                </div>`;
-            renderedKeys.github = true;
+        // --- 1.5 AGGREGATE SUMMARY (profile pictures / names / locations across every module) ---
+        const agg = collectAggregates(logs);
+        const aggSignature = `${agg.avatars.size}|${agg.names.length}|${agg.locations.length}`;
+        if (aggSignature !== renderedKeys.aggSignature) {
+            document.getElementById('slot-aggregates').innerHTML = renderAggregateCards(agg);
+            renderedKeys.aggSignature = aggSignature;
         }
 
-        // --- 3. OTHER MODULES (Proton, WordPress/Gravatar, Snapchat, Vivino, diagnostics...) ---
-        const skipTitles = ['HUDSON ROCK', 'GITHUB', 'SOCIAL MEDIA'];
+        // --- 2. OTHER MODULES (GitHub, Proton, WordPress/Gravatar, Snapchat, Vivino, diagnostics...) ---
+        // GitHub used to get its own hand-built dark "Intelligence" card here;
+        // now it flows through the same generic renderer as every other
+        // module (matches the reference layout: one consistent card format
+        // per site, not a one-off), including its harvested-emails sub-items.
+        const skipTitles = ['HUDSON ROCK', 'SOCIAL MEDIA', 'PROFILE PICTURES'];
         if (renderedKeys.google) skipTitles.push('GOOGLE IDENTITY');
 
         const blocks = parseModuleBlocks(logs).filter(b => {
@@ -1334,7 +1417,7 @@
         });
         document.getElementById('slot-modules-label').classList.toggle('hidden', modulesSlot.children.length === 0);
 
-        // --- 4. SOCIAL MEDIA / CONNECTED SERVICES ---
+        // --- 3. SOCIAL MEDIA / CONNECTED SERVICES ---
         const chips = parseServiceChips(logs);
         if (chips.length > 0) {
             const chipsSlot = document.getElementById('slot-chips');
@@ -1357,7 +1440,7 @@
             if (countEl) countEl.textContent = `${chips.length} found`;
         }
 
-        // --- 5. STEALER LOGS / DATA BREACHES (kept last, most severe finding at the bottom) ---
+        // --- 4. STEALER LOGS / DATA BREACHES (kept last, most severe finding at the bottom) ---
         let breachCount = logs.includes("HUDSON ROCK") ? logs.split(/Machine #\d+/).length - 1 : 0;
         if (!renderedKeys.hudson && logs.includes("HUDSON ROCK")) {
             const machines = logs.split(/Machine #\d+/).slice(1);
@@ -1418,7 +1501,7 @@
         }
 
         // --- Stats: update the existing tiles in place, pulse only the ones that changed ---
-        const sectionCount = (renderedKeys.google ? 1 : 0) + (renderedKeys.github ? 1 : 0) +
+        const sectionCount = (renderedKeys.google ? 1 : 0) +
             renderedKeys.modules.size + (chips.length > 0 ? 1 : 0) + (renderedKeys.hudson ? 1 : 0);
         setStatValue('stat-accounts', chips.length);
         setStatValue('stat-sections', sectionCount);
