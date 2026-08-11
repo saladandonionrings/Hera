@@ -26,6 +26,7 @@ from modules import (
     SoundCloudScanner,
     YouTubeScanner,
     TikTokScanner,
+    RedditScanner,
     WordPressEmailScanner,
     FacebookScanner,
     LeboncoinScanner,
@@ -200,6 +201,7 @@ class EpeiosPro:
                 SoundCloudScanner(self.target).scan()
                 YouTubeScanner(self.target).scan()
                 TikTokScanner(self.target).scan()
+                RedditScanner(self.target).scan()
 
                 if has_github:
                     GitHubScanner(self.target).scan()

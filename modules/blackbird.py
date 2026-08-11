@@ -50,7 +50,9 @@ class BlackbirdScanner:
             ("Telegram", f"https://t.me/{self.username}", "text_present", "tgme_page_extra"),
             ("Mastodon", f"https://mastodon.social/@{self.username}", "status", 200),
             ("Gab", f"https://gab.com/{self.username}", "text_present", 'property="og:type" content="profile"'),
-            ("Reddit", f"https://www.reddit.com/user/{self.username}", "text_not_present", "nobody on Reddit goes by that name"),
+            # Reddit is not checked here either - RedditScanner (deep
+            # analysis module, pulls post/comment history from
+            # deletedby.com) is the sole source for it.
 
             # --- cyber/dev ---
             ("GitHub", f"https://api.github.com/users/{self.username}", "github_api_check", None),
