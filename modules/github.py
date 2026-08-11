@@ -55,18 +55,22 @@ class GitHubScanner:
             
             if 'login' in p:
                 console.module_header("GITHUB")
-                console.success("Profile", username)
-                
+                console.success("Profile", f"https://github.com/{username}/")
+
                 console.info("Full Name", p.get('name', 'Private'))
                 console.info("Location", p.get('location', 'Unknown'))
                 console.info("Created on", p.get('created_at', 'Unknown'))
                 console.info("Company", p.get('company', 'Unknown'))
                 console.info("Website/Blog", p.get('blog', 'None'))
-                
+
                 twitter = p.get('twitter_username')
                 console.info("Twitter", f"https://twitter.com/{twitter}" if twitter else 'None')
                 console.info("Public Repos", p.get('public_repos', 0))
                 console.info("Bio", p.get('bio', 'None'))
+
+                avatar = p.get('avatar_url')
+                if avatar:
+                    console.info("", avatar)
                 
                 console.info("Commit History", "Scanning patches for hidden emails...")
                 harvested = self.get_emails_from_commits(username)

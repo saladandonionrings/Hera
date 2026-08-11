@@ -22,6 +22,7 @@ from .vivino import VivinoScanner
 from .tiktok import TikTokScanner
 from .reddit import RedditScanner
 from .gumroad import GumroadScanner
+from .calendly import CalendlyScanner
 from .spotify import SpotifyScanner
 from .chess import ChessScanner
 from .adobe import AdobeScanner
