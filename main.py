@@ -237,6 +237,13 @@ class EpeiosPro:
                 hr.scan_username(self.target)
                 VivinoScanner().scan(self.target)
 
+                # A username is often reused as-is for the local part of an
+                # email address, so worth a quick existence check against the
+                # freemail providers Hera already has a scanner for.
+                GoogleScanner(f"{self.target}@gmail.com").scan()
+                ProtonScanner().scan(f"{self.target}@proton.me")
+                ProtonScanner().scan(f"{self.target}@protonmail.com")
+
                 # Maigret covers a much broader (and slower) sweep of sites than
                 # the checks above, so it runs last - fast results stream to the
                 # UI first, this fills in the rest once it completes.
