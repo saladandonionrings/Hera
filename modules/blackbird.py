@@ -45,7 +45,8 @@ class BlackbirdScanner:
             # instagram.com's own API instead of a third-party proxy.
             ("X (Twitter)", f"https://nitter.net/{self.username}", "nitter_check", None),
             ("Snapchat", f"https://www.snapchat.com/add/{self.username}", "text_present", "og:title"),
-            ("TikTok", f"https://www.tiktok.com/@{self.username}", "text_not_present", "Couldn't find this account"),
+            # TikTok is not checked here either - TikTokScanner (deep
+            # analysis module) is the sole source for it.
             ("Telegram", f"https://t.me/{self.username}", "text_present", "tgme_page_extra"),
             ("Mastodon", f"https://mastodon.social/@{self.username}", "status", 200),
             ("Gab", f"https://gab.com/{self.username}", "text_present", 'property="og:type" content="profile"'),

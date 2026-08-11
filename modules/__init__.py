@@ -19,7 +19,7 @@ from .nexon import NexonScanner
 from .hudson import HudsonRockScanner
 from .espn import ESPNScanner
 from .vivino import VivinoScanner
-#from .tiktok import TikTokScanner
+from .tiktok import TikTokScanner
 from .spotify import SpotifyScanner
 from .chess import ChessScanner
 from .adobe import AdobeScanner
