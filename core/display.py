@@ -23,9 +23,14 @@ class OutputManager:
         if value is None or str(value).lower() in ["none", "", "null"]:
             return
 
-        padding = max(1, self.align_col - len(str(key)))
+        # At least 2 spaces, not 1: the frontend splits a printed line back
+        # into key/value by looking for a run of 2+ spaces, so a key long
+        # enough to only leave 1 space of padding (any key close to or past
+        # align_col, e.g. some of Maigret's longer site names) would make
+        # the whole line unparseable as one blob with no value.
+        padding = max(2, self.align_col - len(str(key)))
         spaces = " " * padding
-        
+
         # Structure : [ICÔNE] [KEY (Gris)] [ESPACES] [VALUE]
         print(f"  {icon}  {self.GRAY}{key}{self.RESET}{spaces}{value_color}{value}{self.RESET}")
 
@@ -62,7 +67,10 @@ class OutputManager:
         if value is None or str(value).lower() in ["none", ""]:
             return
         # Utilise un gris encore plus discret pour les sous-éléments
-        padding = max(1, self.align_col - len(str(key)) - 4)
+        # (same 2-space minimum as _format_line, and for the same reason -
+        # e.g. GitHub's harvested-email sub-items use the email itself as
+        # the key, which can easily run long).
+        padding = max(2, self.align_col - len(str(key)) - 4)
         spaces = " " * padding
         print(f"      {self.GRAY}└ {key}{self.RESET}{spaces}{self.DIM}{value}{self.RESET}")
 

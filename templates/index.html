@@ -959,7 +959,12 @@
         otherEntries = otherEntries.filter(e => {
             const key = e.key.trim();
             const value = e.value.trim();
-            if (!nameEntry && /name$/i.test(key) && value && !/^(none|private|unknown)$/i.test(value)) { nameEntry = e; return false; }
+            // Requires a word boundary before "name" - matches "Full Name" /
+            // "Display Name" / bare "Name", but not "Username" (every
+            // bucket-split card carries one of those, and a bare /name$/i
+            // would wrongly promote the searched username itself as the
+            // card's headline).
+            if (!nameEntry && /(?:^|\s)name$/i.test(key) && value && !/^(none|private|unknown)$/i.test(value)) { nameEntry = e; return false; }
             if (!urlEntry && e.icon === '✓' && /^https?:\/\//i.test(value)) { urlEntry = e; return false; }
             if (!descEntry && /^(bio|description|about)$/i.test(key) && value && value.toLowerCase() !== 'none') { descEntry = e; return false; }
             if (!statsEntry && /^activity$/i.test(key) && value) { statsEntry = e; return false; }
@@ -1106,7 +1111,11 @@
             const trimmedKey = key.trim();
             const trimmedValue = value.trim();
             if (!trimmedValue) return;
-            if (/name$/i.test(trimmedKey) && !/^(none|private|unknown)$/i.test(trimmedValue)) {
+            // Same word-boundary requirement as the per-card headline
+            // extraction above - "Username" ends in "name" too and would
+            // otherwise flood this aggregate with the searched username
+            // itself, once per bucket-split card.
+            if (/(?:^|\s)name$/i.test(trimmedKey) && !/^(none|private|unknown)$/i.test(trimmedValue)) {
                 names.add(trimmedValue);
             } else if (/^(location|region)$/i.test(trimmedKey) && !/^unknown$/i.test(trimmedValue)) {
                 locations.add(trimmedValue);
