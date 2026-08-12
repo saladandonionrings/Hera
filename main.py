@@ -174,6 +174,13 @@ class EpeiosPro:
                     elif res is None and name == "leboncoin.fr":
                         old_console.info(name, "Skipped (DataDome)")
 
+                # Blank line: closes off the "Social medias" block above so the
+                # frontend doesn't attribute Vivino/LeakCheck/GitHub's own
+                # fields to it (module blocks only have a start marker, not an
+                # end one - a blank line is what tells the parser where one
+                # block's entries stop and free-standing lines begin).
+                print()
+
                 # Vivino and LeakCheck both print their own multi-line block
                 # internally, so they stay out of the concurrent batch above to
                 # avoid interleaving with it.
@@ -209,7 +216,15 @@ class EpeiosPro:
 
                 if has_github:
                     GitHubScanner(self.target).scan()
-                
+
+                # A fresh header (not just a blank line) both closes off
+                # whichever block (GitHub, or Calendly if no GitHub hit) ran
+                # last, so the concurrent checks below don't get attributed to
+                # it as trailing fields, and gives this batch of simple
+                # existence hits a block of its own to render under - reusing
+                # blackbird's title since these are the same kind of result.
+                old_console.module_header("SOCIAL MEDIAS PRESENCE")
+
                 username_scanners = [
                     ("steamcommunity.com", SteamScanner()),
                     ("stats.fm", StatsfmScanner()),
