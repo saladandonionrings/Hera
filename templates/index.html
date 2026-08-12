@@ -4,95 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hera — digital footprint intelligence by email, username or phone number.">
-    <meta name="theme-color" content="#0a0a0b">
+    <meta name="theme-color" content="#0b0d12">
     <title>Hera — Web OSINT</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23140b1f'/%3E%3Crect x='7' y='7' width='86' height='86' rx='16' fill='%2314b8a6'/%3E%3Ctext x='50' y='68' font-size='50' font-family='Georgia,serif' font-weight='800' fill='%23fbbf24' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0d12'/%3E%3Crect x='7' y='7' width='86' height='86' rx='16' fill='%2338bdf8'/%3E%3Ctext x='50' y='67' font-size='48' font-family='Arial,sans-serif' font-weight='800' fill='%230b0d12' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Bronze/teal brand accents kept from the previous theme (medallion,
-        // primary button) - everything else now sits on a near-black ground
-        // to match the reference layout, instead of the old light marble page.
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        bronze: {
-                            50:  '#fbf3ea',
-                            100: '#f2ddc0',
-                            200: '#e4bd88',
-                            300: '#d19c5c',
-                            400: '#bd7f42',
-                            500: '#9c6530',
-                            600: '#7a4f26',
-                            700: '#5c3c1e',
-                            800: '#402a15',
-                        },
-                    },
-                },
-            },
-        };
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Design system: a plain, restrained dashboard rather than a themed
+           page - one accent (signal blue) for anything interactive, emerald/
+           amber/red reserved strictly for found/warning/danger states so
+           color always carries meaning instead of decorating. Legibility and
+           predictable structure over any particular visual gimmick. */
         :root {
             color-scheme: dark;
-            --accent: 96, 165, 250;
-            --gold: 157, 101, 48;
+            --accent: 56, 189, 248;      /* sky-400 */
+            --bg: #0b0d12;
+            --surface: #12141a;
+            --surface-2: #171a21;
+            --border: rgba(255,255,255,.08);
+            --border-strong: rgba(255,255,255,.16);
+            --text: #eef0f3;
+            --text-dim: #939aa8;
+            --text-faint: #5c6473;
         }
 
-        * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+        * { scrollbar-width: thin; scrollbar-color: #2a2d36 transparent; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
-        ::selection { background: rgba(96, 165, 250, .28); color: #f4f4f5; }
+        ::-webkit-scrollbar-thumb { background: #2a2d36; border-radius: 999px; }
+        ::selection { background: rgba(56, 189, 248, .28); color: #f4f4f5; }
 
         html { scroll-behavior: smooth; }
         body {
-            background: #0a0a0b;
-            color: #e4e4e7;
+            background: var(--bg);
+            color: var(--text);
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             position: relative;
         }
-        /* Soft ambient depth behind the whole page - fixed so it never moves or repaints on scroll/re-render.
-           Faint teal/bronze glow low in the black, just enough to keep the page
-           from reading as a flat void. */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background:
-                radial-gradient(60rem 34rem at 50% -8%, rgba(15, 118, 110, .10), transparent 62%),
-                radial-gradient(46rem 30rem at 96% 4%, rgba(157, 101, 48, .07), transparent 58%),
-                radial-gradient(40rem 28rem at 2% 18%, rgba(15, 118, 110, .06), transparent 60%),
-                radial-gradient(55rem 42rem at 50% 115%, rgba(96, 165, 250, .05), transparent 60%),
-                #0a0a0b;
-            pointer-events: none;
-        }
         .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
-        .font-display { font-family: 'Cinzel', ui-serif, Georgia, serif; }
 
-        /* Brand medallion - a coin/seal treatment (teal enamel, bronze rim) standing in
-           for a plain logo square, used once in the header. */
-        .medallion {
-            background: radial-gradient(circle at 32% 28%, #2dd4bf, #0f766e 70%);
-            border: 1.5px solid rgba(157, 101, 48, .55);
-            box-shadow: 0 0 0 3px rgba(157, 101, 48, .18), inset 0 1px 1px rgba(255,255,255,.35);
-        }
-
-        /* A restrained Greek-key (meander) hairline - used sparingly as a single
-           divider, never as a repeating background texture across the page. */
-        .meander {
-            height: 13px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='13' viewBox='0 0 21 13'%3E%3Cpath d='M0.5 12.5 V2.5 H8.5 V8.5 H16.5 V0.5' fill='none' stroke='%23bd7f42' stroke-width='1.3' stroke-linecap='square'/%3E%3C/svg%3E");
-            background-repeat: repeat-x;
-            background-position: center;
-            background-size: 21px 13px;
-            opacity: .3;
+        /* Compact brand mark used once in the header and once (larger) in
+           the hero - a plain rounded square, no coin/seal treatment. */
+        .brand-mark {
+            background: linear-gradient(155deg, #38bdf8, #0ea5b7 65%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 6px 16px -6px rgba(56,189,248,.45);
         }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -116,7 +75,7 @@
 
         @keyframes pulseOnce {
             0% { transform: scale(1); }
-            35% { transform: scale(1.14); color: rgb(157 101 48); }
+            35% { transform: scale(1.14); color: rgb(56 189 248); }
             100% { transform: scale(1); }
         }
         .pulse-once { animation: pulseOnce .5s cubic-bezier(.16,1,.3,1) both; }
@@ -143,92 +102,40 @@
         }
 
         .card {
-            position: relative;
-            background: #161617;
-            border: 1px solid rgba(255, 255, 255, .08);
-            box-shadow: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 14px 28px -18px rgba(0, 0, 0, .6);
-            border-radius: 1.25rem;
-            transform-style: preserve-3d;
-            transition: border-color .25s ease, transform .15s ease-out, box-shadow .15s ease-out;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: .875rem;
+            transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
         }
         .card:hover {
-            border-color: rgba(96, 165, 250, .3);
+            border-color: var(--border-strong);
             transform: translateY(-2px);
-            box-shadow: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 18px 34px -18px rgba(0, 0, 0, .7);
+            box-shadow: 0 12px 24px -14px rgba(0,0,0,.55);
         }
-        .card-flat { background: #1c1c1e; border: 1px solid rgba(255, 255, 255, .08); border-radius: 1rem; }
+        .card-flat { background: var(--surface-2); border: 1px solid var(--border); border-radius: .75rem; }
 
-        /* Small uppercase eyebrow used to introduce a group of result cards,
-           echoing the header's meander divider without repeating the texture. */
+        /* Small uppercase eyebrow used to introduce a group of result cards. */
         .section-label {
             display: flex; align-items: center; gap: .65rem;
             font-family: 'JetBrains Mono', ui-monospace, monospace;
-            font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-            color: rgba(228, 197, 152, .8);
-            margin: 0 .25rem .9rem;
+            font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+            color: var(--text-faint);
+            margin: 0 .1rem .9rem;
         }
         .section-label::after {
             content: ''; flex: 1; height: 1px;
-            background: linear-gradient(90deg, rgba(157, 101, 48, .4), transparent);
+            background: var(--border);
         }
 
-        /* Carousel: every result card (aggregate + per-site) sits in one
-           horizontally-scrolling, snap-to-card row instead of a stacked
-           grid - swipeable on touch, arrow-buttons on desktop. Edges fade
-           out via a mask so a partially-visible next card reads as "more
-           to scroll" rather than getting cut off hard. */
-        .carousel-track {
-            display: flex;
-            align-items: stretch;
-            gap: 1.25rem;
-            overflow-x: auto;
-            overscroll-behavior-x: contain;
-            scroll-snap-type: x proximity;
-            scroll-behavior: smooth;
-            padding: .75rem 1.75rem 1.5rem;
-            -webkit-mask-image: linear-gradient(90deg, transparent, black 28px, black calc(100% - 28px), transparent);
-            mask-image: linear-gradient(90deg, transparent, black 28px, black calc(100% - 28px), transparent);
+        /* Results: a predictable, responsive grid - every card the same
+           column width, wrapping naturally, nothing hidden off-screen and
+           nothing reordering itself as more results stream in. */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+            gap: 1rem;
+            align-items: start;
         }
-        .carousel-track > * {
-            flex: 0 0 auto;
-            width: 78vw;
-            scroll-snap-align: start;
-        }
-        @media (min-width: 640px) { .carousel-track > * { width: 320px; } }
-
-        /* Pokémon-card style holographic tilt: a 3D rotation that follows the
-           cursor (applied via inline style - see initHoloEffect, further
-           down the page) plus a glare/rainbow-sheen overlay that tracks the
-           same cursor position through the --holo-x/--holo-y custom
-           properties. Scoped to .card so every result card gets it for
-           free; harmless on cards outside the carousel since .holo-active
-           is only ever toggled by the carousel's own delegated listener. */
-        .card::before, .card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .25s ease;
-        }
-        .card::before {
-            background: radial-gradient(circle at var(--holo-x, 50%) var(--holo-y, 50%),
-                rgba(255,255,255,.4), rgba(120,190,255,.16) 32%, transparent 60%);
-            mix-blend-mode: overlay;
-            z-index: 5;
-        }
-        .card::after {
-            background: linear-gradient(115deg, transparent 22%,
-                rgba(255,255,255,.14) 36%, rgba(120,190,255,.22) 42%,
-                rgba(255,150,255,.18) 48%, transparent 62%);
-            background-size: 250% 250%;
-            background-position: var(--holo-x, 50%) var(--holo-y, 50%);
-            mix-blend-mode: color-dodge;
-            z-index: 6;
-        }
-        .card.holo-active::before { opacity: 1; }
-        .card.holo-active::after { opacity: .65; }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -243,58 +150,57 @@
 <body>
 
     <!-- ===== TOP BAR ===== -->
-    <header class="sticky top-0 z-30 bg-[#0a0a0b]/90 backdrop-blur-md border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+    <header class="sticky top-0 z-30 bg-[#0b0d12]/90 backdrop-blur-md border-b border-white/[.07]">
+        <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
             <div class="flex items-center gap-2.5">
-                <div class="medallion w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-                    <span class="font-display font-bold text-bronze-50 text-[14px]">H</span>
+                <div class="brand-mark w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-fingerprint text-white text-[15px]"></i>
                 </div>
-                <span class="font-display font-semibold text-zinc-100 text-[18px] tracking-wide">Hera</span>
+                <span class="font-semibold text-zinc-100 text-[17px] tracking-tight">Hera</span>
             </div>
 
             <div class="flex items-center gap-1.5 sm:gap-3">
                 <span id="status" class="mono text-[11px] font-semibold hidden sm:flex items-center gap-2 text-zinc-500 mr-1">
-                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span>
                     <span id="status-text">IDLE</span>
                 </span>
                 <button type="button" onclick="toggleGhuntDrawer()" title="Credentials (GHunt / Telegram)"
-                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-400 hover:bg-white/5 transition-colors">
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-sky-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-key text-sm"></i>
                 </button>
                 <button type="button" onclick="toggleLogsDrawer()" title="View raw output"
-                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-400 hover:bg-white/5 transition-colors">
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-sky-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-terminal text-sm"></i>
                 </button>
             </div>
         </div>
-        <div class="meander"></div>
-        <div class="h-[2px] bg-white/5 overflow-hidden">
-            <div id="progress-bar" class="h-full w-1/3 bg-gradient-to-r from-teal-500 to-bronze-500 opacity-0"></div>
+        <div class="h-[2px] bg-white/[.06] overflow-hidden">
+            <div id="progress-bar" class="h-full w-1/3 bg-sky-400 opacity-0"></div>
         </div>
     </header>
 
     <!-- ===== MAIN ===== -->
-    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8">
 
         <!-- Search: large & centered on load, collapses into a compact bar on first scan -->
-        <div id="hero-outer" class="flex flex-col items-center justify-center text-center" style="min-height:56vh;">
-            <div id="hero-brand" class="mb-9" style="max-height:260px; overflow:hidden;">
-                <div class="medallion w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-fingerprint text-2xl text-white/90"></i>
+        <div id="hero-outer" class="flex flex-col items-center justify-center text-center" style="min-height:50vh;">
+            <div id="hero-brand" class="mb-8" style="max-height:220px; overflow:hidden;">
+                <div class="brand-mark w-14 h-14 mx-auto mb-6 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-fingerprint text-xl text-white"></i>
                 </div>
-                <h1 class="font-display text-4xl sm:text-5xl font-semibold tracking-wide text-zinc-100">Investigate a digital footprint</h1>
-                <p class="text-zinc-400 mt-4 max-w-md mx-auto text-[15px] leading-relaxed">
+                <h1 class="text-3xl sm:text-[2.5rem] font-bold tracking-tight text-zinc-50">Investigate a digital footprint</h1>
+                <p class="text-zinc-400 mt-3.5 max-w-md mx-auto text-[15px] leading-relaxed">
                     Search an email address, username or phone number across identity, social and breach-intelligence sources.
                 </p>
             </div>
 
             <form id="search-form" class="w-full max-w-2xl" autocomplete="off">
-                <div class="flex items-center gap-2 bg-[#161617] border border-white/10 rounded-2xl p-2.5 shadow-xl shadow-black/40 focus-within:border-teal-500/50 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all">
-                    <i id="search-icon" class="fa-solid fa-magnifying-glass text-zinc-500 pl-4 text-lg"></i>
+                <div class="flex items-center gap-2 bg-[#12141a] border border-white/10 rounded-xl p-2 shadow-2xl shadow-black/40 focus-within:border-sky-400/50 focus-within:ring-4 focus-within:ring-sky-400/10 transition-all">
+                    <i id="search-icon" class="fa-solid fa-magnifying-glass text-zinc-500 pl-3.5 text-base"></i>
                     <input id="target" type="text" placeholder="name@domain.com, username or +33612345678" aria-label="Target to investigate: email, username or phone number"
-                           class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-lg px-3.5 py-3.5">
+                           class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-[15px] px-3 py-3.5">
                     <button id="search-btn" type="submit"
-                            class="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center gap-2.5 shrink-0 transition-all text-[15px] px-6 py-3.5 shadow-lg shadow-black/30 ring-1 ring-bronze-400/30">
+                            class="bg-sky-500 hover:bg-sky-400 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-[14px] px-5 py-3">
                         <i id="search-btn-icon" class="fa-solid fa-arrow-right"></i>
                         <span id="search-btn-label">Scan</span>
                     </button>
@@ -307,63 +213,54 @@
             <!-- Target + at-a-glance stats, laid out as one toolbar: identity on the
                  left, the three stat tiles filling the remaining width so it reads as
                  a single dashboard header instead of a cramped, narrow grid. -->
-            <div class="flex flex-col lg:flex-row gap-3.5 mb-6">
+            <div class="flex flex-col lg:flex-row gap-3 mb-6">
                 <div id="target-summary" class="card p-5 lg:w-[19rem] shrink-0"></div>
-                <div id="stats-summary" class="flex-1 grid grid-cols-3 gap-3.5"></div>
+                <div id="stats-summary" class="flex-1 grid grid-cols-3 gap-3"></div>
             </div>
 
             <!-- Export -->
-            <div id="export-bar" class="hidden mb-8 flex justify-end gap-2">
+            <div id="export-bar" class="hidden mb-6 flex justify-end gap-2">
                 <button type="button" onclick="exportMarkdown()" title="Export as Markdown"
-                        class="bg-[#161617] border border-white/10 hover:border-teal-500/40 text-zinc-400 hover:text-teal-400 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                        class="bg-[#12141a] border border-white/10 hover:border-sky-400/40 text-zinc-400 hover:text-sky-400 text-[13px] font-medium rounded-lg px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-brands fa-markdown"></i> Markdown
                 </button>
                 <button type="button" onclick="exportPdf()" title="Export as PDF"
-                        class="bg-[#161617] border border-white/10 hover:border-bronze-400/40 text-zinc-400 hover:text-bronze-400 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                        class="bg-[#12141a] border border-white/10 hover:border-emerald-400/40 text-zinc-400 hover:text-emerald-400 text-[13px] font-medium rounded-lg px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-solid fa-file-pdf"></i> PDF
                 </button>
             </div>
 
-            <!-- Results - a single horizontally-scrolling carousel: aggregate
-                 summary cards (profile pictures / names / locations /
-                 usernames / emails / phones) and every per-site card are all
-                 children of the same #slot-modules track, in discovery
-                 order, snapping card-by-card as you scroll or use the arrow
-                 buttons. Only the stealer-logs (breach) block stays outside
-                 it, as a distinct full-width danger section. -->
+            <!-- Results - a single responsive grid: aggregate summary cards
+                 (profile pictures / names / locations / usernames / emails /
+                 phones) and every per-site card are all children of the same
+                 #slot-modules grid, in discovery order, wrapping to as many
+                 columns as the viewport allows. Only the stealer-logs
+                 (breach) block stays outside it, as a distinct full-width
+                 danger section. -->
             <main aria-live="polite">
                 <div id="slot-loading"></div>
-                <div id="slot-modules-wrap" class="relative">
-                    <button type="button" onclick="carouselScroll(-1)" aria-label="Scroll left"
-                            class="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#161617] border border-white/10 items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-white/25 shadow-lg shadow-black/40 transition-colors">
-                        <i class="fa-solid fa-chevron-left text-sm"></i>
-                    </button>
-                    <div id="slot-modules" class="carousel-track"></div>
-                    <button type="button" onclick="carouselScroll(1)" aria-label="Scroll right"
-                            class="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#161617] border border-white/10 items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-white/25 shadow-lg shadow-black/40 transition-colors">
-                        <i class="fa-solid fa-chevron-right text-sm"></i>
-                    </button>
+                <div id="slot-modules-wrap">
+                    <div id="slot-modules" class="results-grid"></div>
                 </div>
                 <div id="slot-hudson" class="mt-8"></div>
             </main>
         </div>
     </div>
 
-    <div class="meander max-w-xs mx-auto mb-5"></div>
     <footer class="text-center mono text-[11px] text-zinc-500 pb-8 px-5">
         Responsible use only — your own data, or with explicit authorization.
     </footer>
 
     <!-- ===== LOGS DRAWER ===== -->
     <div id="logs-overlay" onclick="toggleLogsDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
-    <div id="logs-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[36rem] bg-[#111113] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+    <div id="logs-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[36rem] bg-[#0f1116] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
         <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-terminal text-teal-400 text-sm"></i>
+                <i class="fa-solid fa-terminal text-sky-400 text-sm"></i>
                 <span class="text-[15px] text-zinc-100 font-semibold">Raw output</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <button type="button" onclick="copyLogs()" title="Copy" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-400 hover:bg-white/5 transition-colors">
+                <button type="button" onclick="copyLogs()" title="Copy" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-sky-400 hover:bg-white/5 transition-colors">
                     <i id="copy-icon" class="fa-regular fa-copy"></i>
                 </button>
                 <button type="button" onclick="toggleLogsDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-white/5 transition-colors">
@@ -376,10 +273,10 @@
 
     <!-- ===== GHUNT AUTH DRAWER ===== -->
     <div id="ghunt-overlay" onclick="toggleGhuntDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
-    <div id="ghunt-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[30rem] bg-[#111113] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+    <div id="ghunt-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[30rem] bg-[#0f1116] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
         <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-key text-teal-400 text-sm"></i>
+                <i class="fa-solid fa-key text-sky-400 text-sm"></i>
                 <span class="text-[15px] text-zinc-100 font-semibold">Credentials</span>
             </div>
             <button type="button" onclick="toggleGhuntDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-white/5 transition-colors">
@@ -391,13 +288,13 @@
                 <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">GHunt (Google Identity)</h3>
                 <p class="text-[14px] text-zinc-400 leading-relaxed">
                     The Google Identity module needs a GHunt session on the server. Install the
-                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-teal-400 hover:text-teal-300 hover:underline">GHunt Companion</a>
+                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 hover:underline">GHunt Companion</a>
                     browser extension, export your logged-in Google session as base64, then paste it below.
                 </p>
                 <textarea id="ghunt-cookies" rows="8" placeholder="Paste base64-encoded credentials here..."
-                          class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"></textarea>
+                          class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all resize-none"></textarea>
                 <button type="button" id="ghunt-login-btn" onclick="submitGhuntLogin()"
-                        class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/30">
+                        class="w-full bg-sky-500 hover:bg-sky-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
                     <i id="ghunt-login-icon" class="fa-solid fa-right-to-bracket"></i>
                     <span id="ghunt-login-label">Authenticate</span>
                 </button>
@@ -413,32 +310,32 @@
                 <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">Telegram (Phone module)</h3>
                 <p class="text-[14px] text-zinc-400 leading-relaxed">
                     Optional — enables the Telegram registration check on phone number scans. Create your own API app at
-                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-teal-400 hover:text-teal-300 hover:underline">my.telegram.org/apps</a>,
+                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 hover:underline">my.telegram.org/apps</a>,
                     then log in below — Hera saves the API ID/Hash to <code class="mono bg-white/5 px-1 py-0.5 rounded">.env</code> automatically, no manual step needed.
                 </p>
 
                 <div class="grid grid-cols-2 gap-3">
                     <input id="tg-api-id" type="text" inputmode="numeric" placeholder="API ID"
-                           class="col-span-1 bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                           class="col-span-1 bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
                     <input id="tg-api-hash" type="text" placeholder="API Hash"
-                           class="col-span-1 bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                           class="col-span-1 bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
                 </div>
                 <input id="tg-phone" type="tel" placeholder="Your phone number, e.g. +33612345678"
-                       class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                       class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
 
                 <button type="button" id="tg-send-code-btn" onclick="submitTelegramSendCode()"
-                        class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/30">
+                        class="w-full bg-sky-500 hover:bg-sky-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
                     <i id="tg-send-code-icon" class="fa-solid fa-paper-plane"></i>
                     <span id="tg-send-code-label">Send code</span>
                 </button>
 
                 <div id="tg-verify-block" class="hidden space-y-3">
                     <input id="tg-code" type="text" inputmode="numeric" placeholder="Code received on Telegram"
-                           class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
                     <input id="tg-password" type="password" placeholder="2FA password (only if asked)"
-                           class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
                     <button type="button" id="tg-verify-btn" onclick="submitTelegramVerify()"
-                            class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/30">
+                            class="w-full bg-sky-500 hover:bg-sky-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
                         <i id="tg-verify-icon" class="fa-solid fa-check"></i>
                         <span id="tg-verify-label">Verify</span>
                     </button>
@@ -497,65 +394,6 @@
 
     function getFavicon(site) {
         return `https://www.google.com/s2/favicons?domain=${encodeURIComponent((site || '').trim())}&sz=64`;
-    }
-
-    // --- Results carousel: horizontal scroll + arrow buttons ---
-    function carouselScroll(direction) {
-        const track = document.getElementById('slot-modules');
-        if (!track) return;
-        const firstCard = track.firstElementChild;
-        const step = (firstCard ? firstCard.getBoundingClientRect().width : 320) + 20;
-        track.scrollBy({ left: direction * step, behavior: 'smooth' });
-    }
-
-    // --- Pokémon-card style holographic tilt ---
-    // One delegated listener pair on the carousel track (rather than one per
-    // card) so newly-streamed-in cards get the effect for free with no extra
-    // wiring per insertion. Tilt angle + glare position both follow the
-    // cursor's position within whichever .card it's currently over; .card's
-    // own ::before/::after (see <style>) render the glare using the
-    // --holo-x/--holo-y custom properties this sets, gated by the
-    // .holo-active class so cards elsewhere on the page are never affected.
-    const HOLO_MAX_TILT_DEG = 14;
-
-    function applyHoloTilt(card, clientX, clientY) {
-        const rect = card.getBoundingClientRect();
-        const x = (clientX - rect.left) / rect.width;
-        const y = (clientY - rect.top) / rect.height;
-        const rotateY = (x - 0.5) * HOLO_MAX_TILT_DEG;
-        const rotateX = (0.5 - y) * HOLO_MAX_TILT_DEG;
-        card.style.transform = `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02,1.02,1.02)`;
-        card.style.setProperty('--holo-x', `${(x * 100).toFixed(1)}%`);
-        card.style.setProperty('--holo-y', `${(y * 100).toFixed(1)}%`);
-    }
-
-    function resetHoloTilt(card) {
-        card.style.transform = '';
-        card.style.removeProperty('--holo-x');
-        card.style.removeProperty('--holo-y');
-        card.classList.remove('holo-active');
-    }
-
-    function initHoloEffect(container) {
-        if (!container || container.dataset.holoInit) return;
-        container.dataset.holoInit = '1';
-        let activeCard = null;
-
-        container.addEventListener('mousemove', (e) => {
-            const card = e.target.closest('.card');
-            if (!card || !container.contains(card)) {
-                if (activeCard) { resetHoloTilt(activeCard); activeCard = null; }
-                return;
-            }
-            if (activeCard && activeCard !== card) resetHoloTilt(activeCard);
-            card.classList.add('holo-active');
-            applyHoloTilt(card, e.clientX, e.clientY);
-            activeCard = card;
-        });
-
-        container.addEventListener('mouseleave', () => {
-            if (activeCard) { resetHoloTilt(activeCard); activeCard = null; }
-        });
     }
 
     function toggleLogsDrawer() {
@@ -744,7 +582,7 @@
         label.textContent = text;
         label.parentElement.className = `mono text-[11px] font-semibold hidden sm:flex items-center gap-2 mr-1 ${textClass || 'text-zinc-600'}`;
         dot.className = `w-1.5 h-1.5 rounded-full ${dotClass} ${running ? 'animate-pulse' : ''}`;
-        progress.className = running ? 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-bronze-500 opacity-100 progress-run' : 'h-full w-1/3 bg-gradient-to-r from-teal-500 to-bronze-500 opacity-0';
+        progress.className = running ? 'h-full w-1/3 bg-sky-400 opacity-100 progress-run' : 'h-full w-1/3 bg-sky-400 opacity-0';
     }
 
     function setLoading(isLoading) {
@@ -779,7 +617,7 @@
         form.className = 'w-full max-w-md';
         searchIcon.className = 'fa-solid fa-magnifying-glass text-zinc-400 pl-3.5 text-sm';
         input.className = 'flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-sm px-2.5 py-2.5';
-        btn.className = 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5 ring-1 ring-bronze-400/40';
+        btn.className = 'bg-sky-500 hover:bg-sky-400 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5';
     }
 
     // Extracts success lines (✓ icon) from the raw stream and only keeps the ones that
@@ -1020,7 +858,7 @@
             ? `<span class="block mt-1 text-center text-[10px] text-zinc-500 truncate max-w-[4.5rem]">${escapeHtml(label)}</span>`
             : '';
         return `<div class="flex flex-col items-center shrink-0">
-            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-[#1c1c1e] hover:border-sky-400/50 transition-colors">
+            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-[#171a21] hover:border-sky-400/50 transition-colors">
                 <img src="${src}" alt="" class="w-full h-full object-cover block" onerror="this.closest('div').style.display='none'">
             </a>
             ${caption}
@@ -1141,7 +979,7 @@
 
         const headHtml = avatarSrc
             ? `<div class="flex items-start gap-3 mb-1">
-                <a href="${avatarSrc}" target="_blank" rel="noopener noreferrer" class="shrink-0 w-11 h-11 rounded-full overflow-hidden border border-white/10 bg-[#1c1c1e]">
+                <a href="${avatarSrc}" target="_blank" rel="noopener noreferrer" class="shrink-0 w-11 h-11 rounded-full overflow-hidden border border-white/10 bg-[#171a21]">
                     <img src="${avatarSrc}" alt="" class="w-full h-full object-cover" onerror="this.closest('a').style.display='none'">
                 </a>
                 <div class="min-w-0 flex-1 pt-1">${headerRow}</div>
@@ -1285,10 +1123,9 @@
     }
 
     // Fixed-position placeholder cards (one per aggregate category, created
-    // once and updated in place) - keeps their spot stable in the carousel
-    // across re-renders, instead of being torn down and reinserted (which
-    // would jump them to the end and disturb scroll position) every time
-    // new data streams in.
+    // once and updated in place) - keeps their spot stable in the results
+    // grid across re-renders, instead of being torn down and reinserted
+    // (which would jump them to the end) every time new data streams in.
     const AGGREGATE_DEFS = [
         { id: 'agg-avatars', icon: 'fa-solid fa-images', title: 'Profile pictures' },
         { id: 'agg-names', icon: 'fa-solid fa-signature', title: 'Names' },
@@ -1349,8 +1186,8 @@
                 <div class="h-3 w-2/3 rounded-full skeleton"></div>
             </div>
             <div class="flex items-center gap-2.5 mt-8">
-                <div class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
-                <p class="mono text-[11px] text-teal-400 tracking-widest uppercase">Scanning modules…</p>
+                <div class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></div>
+                <p class="mono text-[11px] text-sky-400 tracking-widest uppercase">Scanning modules…</p>
             </div>
         </div>`;
     }
@@ -1363,7 +1200,7 @@
                 <div class="mono text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Accounts</div>
             </div>
             <div class="card p-4 text-center">
-                <i class="fa-solid fa-layer-group text-teal-400 text-sm mb-2"></i>
+                <i class="fa-solid fa-layer-group text-sky-400 text-sm mb-2"></i>
                 <div id="stat-sections" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
                 <div class="mono text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Sections</div>
             </div>
@@ -1632,7 +1469,6 @@
         lastScanLogs = logs;
 
         const modulesSlot = document.getElementById('slot-modules');
-        initHoloEffect(modulesSlot);
         ensureAggregatePlaceholders(modulesSlot);
         updateAggregateCards(collectAggregates(logs));
 
@@ -1671,7 +1507,7 @@
         bucketBlocks.forEach(bucket => splitBucketBlock(bucket, target).forEach(insertCard));
 
         // --- Stealer logs / data breaches - a distinct full-width danger
-        // section outside the carousel, since its layout (per-machine
+        // section outside the results grid, since its layout (per-machine
         // logins/passwords) doesn't fit the generic card format. ---
         let breachCount = logs.includes("HUDSON ROCK") ? logs.split(/Machine #\d+/).length - 1 : 0;
         if (!renderedKeys.hudson && logs.includes("HUDSON ROCK")) {
@@ -1773,13 +1609,13 @@
         const isEmail = target.includes('@');
         targetSummary.innerHTML = `
             <div class="flex items-center gap-2 mb-1.5">
-                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-teal-400 text-xs"></i>
+                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-sky-400 text-xs"></i>
                 <span class="mono text-[10px] uppercase tracking-wider text-zinc-500">Target</span>
             </div>
             <p class="text-[15px] text-zinc-100 break-all font-medium">${escapeHtml(target)}</p>`;
         loadingSlot.innerHTML = loadingSkeleton();
         logsElement.textContent = "› Scanning...";
-        setStatus('SCANNING...', 'bg-teal-500', true, 'text-teal-400');
+        setStatus('SCANNING...', 'bg-sky-500', true, 'text-sky-400');
 
         let gotAnyUpdate = false;
         const es = new EventSource(`/scan-stream?target=${encodeURIComponent(target)}`);
