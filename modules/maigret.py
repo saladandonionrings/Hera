@@ -27,6 +27,23 @@ ALREADY_COVERED_SITES = {
 
 EXCLUDED_SITES = FALSE_POSITIVE_SITES | ALREADY_COVERED_SITES
 
+# Maigret's data.json lists some services as many near-duplicate
+# regional/game-mode entries (e.g. a dozen+ separate "OP.GG [LeagueOfLegends]
+# <region>" sites) that all match on the same generic username pattern
+# rather than confirming a real per-region account - false positives the
+# same way FALSE_POSITIVE_SITES are, just as a whole family of names
+# instead of one exact string to list.
+FALSE_POSITIVE_PREFIXES = (
+    "op.gg",
+)
+
+
+def _is_excluded_site(site_name):
+    normalized = site_name.strip().lower()
+    if normalized in EXCLUDED_SITES:
+        return True
+    return normalized.startswith(FALSE_POSITIVE_PREFIXES)
+
 _supports_no_autoupdate = None
 
 
@@ -113,7 +130,7 @@ class MaigretScanner:
 
         found_any = False
         for site_name, data in sorted(results.items()):
-            if site_name.strip().lower() in EXCLUDED_SITES:
+            if _is_excluded_site(site_name):
                 continue
             url = data.get("url_user") or (data.get("status") or {}).get("url", "")
             if not url:
