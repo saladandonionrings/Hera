@@ -1,8 +1,10 @@
 import requests
+from core.scrape import AVATAR_SKIP_MARKERS
 
 class WattpadScanner:
     def __init__(self):
         self.profile_url = ""
+        self.meta = {}
 
     def scan(self, username):
         try:
@@ -13,6 +15,13 @@ class WattpadScanner:
             if not isinstance(data, dict) or not data.get("username"):
                 return False
             self.profile_url = f"https://www.wattpad.com/user/{data.get('username', username)}"
+            if data.get("name"):
+                self.meta["name"] = data["name"]
+            avatar = data.get("avatar")
+            if avatar and not any(m in avatar.lower() for m in AVATAR_SKIP_MARKERS):
+                self.meta["avatar"] = avatar
+            if data.get("description"):
+                self.meta["bio"] = data["description"][:220]
             return True
         except: pass
         return False

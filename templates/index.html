@@ -1060,7 +1060,18 @@
             .map(e => {
                 const value = e.value.trim();
                 const isUrl = /^https?:\/\//i.test(value);
-                const entries = [{ icon: '✓', key: isUrl ? 'Profile' : 'Status', value, subs: e.subs || [] }];
+                const entries = [{ icon: '✓', key: isUrl ? 'Profile' : 'Status', value, subs: [] }];
+                // The backend attaches whatever it could scrape from the hit
+                // itself (Avatar/Name/Bio, via console.sub_item right after
+                // the success line) as sub-items of that one entry. Promote
+                // them to first-class fields of this site's own card instead
+                // of leaving them nested, so the generic card renderer's
+                // avatar-hero/headline-name/bio extraction (which only looks
+                // at top-level entries) picks them up exactly like it would
+                // for any dedicated rich module.
+                (e.subs || []).forEach(sub => {
+                    entries.push({ icon: '•', key: sub.key, value: sub.value, subs: [] });
+                });
                 if (target) entries.push({ icon: '•', key: targetKey, value: target, subs: [] });
                 return { title: e.key.trim(), entries };
             });
@@ -1080,29 +1091,44 @@
         const phones = new Set();
         const usernames = new Set();
 
+        // Shared by both a block's own top-level entries and any sub-items
+        // attached to them (e.g. Avatar/Name/Bio/Location scraped from a
+        // simple existence check's own hit page, printed via
+        // console.sub_item right under the success line) - a scraped field
+        // is worth the same thing for the summary regardless of which level
+        // it was found at.
+        function classify(key, value, fallbackLabel) {
+            if (isAvatarEntry({ key, value })) {
+                const src = safeUrl(value);
+                if (src && !avatars.has(src)) avatars.set(src, fallbackLabel);
+                return;
+            }
+            const trimmedKey = key.trim();
+            const trimmedValue = value.trim();
+            if (!trimmedValue) return;
+            if (/name$/i.test(trimmedKey) && !/^(none|private|unknown)$/i.test(trimmedValue)) {
+                names.add(trimmedValue);
+            } else if (/^(location|region)$/i.test(trimmedKey) && !/^unknown$/i.test(trimmedValue)) {
+                locations.add(trimmedValue);
+            } else if (/^email$/i.test(trimmedKey) && trimmedValue.includes('@')) {
+                emails.add(trimmedValue);
+            } else if (/^phone(\s*number)?$/i.test(trimmedKey)) {
+                phones.add(trimmedValue);
+            } else if (/^username$/i.test(trimmedKey)) {
+                usernames.add(trimmedValue);
+            }
+        }
+
         blocks.forEach(block => {
             let blockUrl = null;
             block.entries.forEach(entry => {
-                if (isAvatarEntry(entry)) {
-                    const src = safeUrl(entry.value);
-                    if (src && !avatars.has(src)) avatars.set(src, avatarLabel(entry) || block.title);
-                    return;
-                }
-                const key = entry.key.trim();
-                const value = entry.value.trim();
-                if (!value) return;
-                if (/name$/i.test(key) && !/^(none|private|unknown)$/i.test(value)) {
-                    names.add(value);
-                } else if (/^(location|region)$/i.test(key) && !/^unknown$/i.test(value)) {
-                    locations.add(value);
-                } else if (/^email$/i.test(key) && value.includes('@')) {
-                    emails.add(value);
-                } else if (/^phone(\s*number)?$/i.test(key)) {
-                    phones.add(value);
-                } else if (/^username$/i.test(key)) {
-                    usernames.add(value);
-                }
-                if (!blockUrl && entry.icon === '✓' && /^https?:\/\//i.test(value)) blockUrl = value;
+                classify(entry.key, entry.value, avatarLabel(entry) || block.title);
+                // A sub-item's own key is generic ("Avatar", "Name" - no
+                // site prefix to derive a caption from), so fall back to the
+                // site name from the entry it's attached to (e.g. "Chess.com"
+                // for a bucket hit), not the umbrella block title.
+                (entry.subs || []).forEach(sub => classify(sub.key, sub.value, entry.key.trim() || block.title));
+                if (!blockUrl && entry.icon === '✓' && /^https?:\/\//i.test(entry.value.trim())) blockUrl = entry.value.trim();
             });
             if (blockUrl) {
                 const handle = deriveHandle(blockUrl);
