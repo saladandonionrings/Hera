@@ -143,11 +143,13 @@
         }
 
         .card {
+            position: relative;
             background: #161617;
             border: 1px solid rgba(255, 255, 255, .08);
             box-shadow: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 14px 28px -18px rgba(0, 0, 0, .6);
             border-radius: 1.25rem;
-            transition: border-color .25s ease, transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease;
+            transform-style: preserve-3d;
+            transition: border-color .25s ease, transform .15s ease-out, box-shadow .15s ease-out;
         }
         .card:hover {
             border-color: rgba(96, 165, 250, .3);
@@ -170,24 +172,63 @@
             background: linear-gradient(90deg, rgba(157, 101, 48, .4), transparent);
         }
 
-        /* Masonry: cards flow top-to-bottom per column and wrap to the next
-           column when full, instead of an aligned grid where every card in a
-           row shares the same height - matches the reference layout, where a
-           tall card (many fields) and a short one (single field) can sit
-           side by side without forcing empty space around either. */
-        .masonry {
-            column-gap: 1.25rem;
-            column-count: 1;
+        /* Carousel: every result card (aggregate + per-site) sits in one
+           horizontally-scrolling, snap-to-card row instead of a stacked
+           grid - swipeable on touch, arrow-buttons on desktop. Edges fade
+           out via a mask so a partially-visible next card reads as "more
+           to scroll" rather than getting cut off hard. */
+        .carousel-track {
+            display: flex;
+            align-items: stretch;
+            gap: 1.25rem;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scroll-snap-type: x proximity;
+            scroll-behavior: smooth;
+            padding: .75rem 1.75rem 1.5rem;
+            -webkit-mask-image: linear-gradient(90deg, transparent, black 28px, black calc(100% - 28px), transparent);
+            mask-image: linear-gradient(90deg, transparent, black 28px, black calc(100% - 28px), transparent);
         }
-        @media (min-width: 768px) { .masonry { column-count: 2; } }
-        @media (min-width: 1280px) { .masonry { column-count: 3; } }
-        .masonry > * {
-            break-inside: avoid;
-            -webkit-column-break-inside: avoid;
-            margin-bottom: 1.25rem;
-            display: block;
-            width: 100%;
+        .carousel-track > * {
+            flex: 0 0 auto;
+            width: 78vw;
+            scroll-snap-align: start;
         }
+        @media (min-width: 640px) { .carousel-track > * { width: 320px; } }
+
+        /* Pokémon-card style holographic tilt: a 3D rotation that follows the
+           cursor (applied via inline style - see initHoloEffect, further
+           down the page) plus a glare/rainbow-sheen overlay that tracks the
+           same cursor position through the --holo-x/--holo-y custom
+           properties. Scoped to .card so every result card gets it for
+           free; harmless on cards outside the carousel since .holo-active
+           is only ever toggled by the carousel's own delegated listener. */
+        .card::before, .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        .card::before {
+            background: radial-gradient(circle at var(--holo-x, 50%) var(--holo-y, 50%),
+                rgba(255,255,255,.4), rgba(120,190,255,.16) 32%, transparent 60%);
+            mix-blend-mode: overlay;
+            z-index: 5;
+        }
+        .card::after {
+            background: linear-gradient(115deg, transparent 22%,
+                rgba(255,255,255,.14) 36%, rgba(120,190,255,.22) 42%,
+                rgba(255,150,255,.18) 48%, transparent 62%);
+            background-size: 250% 250%;
+            background-position: var(--holo-x, 50%) var(--holo-y, 50%);
+            mix-blend-mode: color-dodge;
+            z-index: 6;
+        }
+        .card.holo-active::before { opacity: 1; }
+        .card.holo-active::after { opacity: .65; }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -283,18 +324,25 @@
                 </button>
             </div>
 
-            <!-- Results - a single masonry flow: aggregate summary cards
-                 (profile pictures / names / locations / usernames / emails /
-                 phones) and every per-site card are all children of the same
-                 #slot-modules column container, in discovery order, so they
-                 pack the available width the way the reference layout does
-                 instead of stacking in separate full-width bands. Only the
-                 stealer-logs (breach) block stays outside it, as a distinct
-                 full-width danger section. -->
+            <!-- Results - a single horizontally-scrolling carousel: aggregate
+                 summary cards (profile pictures / names / locations /
+                 usernames / emails / phones) and every per-site card are all
+                 children of the same #slot-modules track, in discovery
+                 order, snapping card-by-card as you scroll or use the arrow
+                 buttons. Only the stealer-logs (breach) block stays outside
+                 it, as a distinct full-width danger section. -->
             <main aria-live="polite">
                 <div id="slot-loading"></div>
-                <div id="slot-modules-wrap">
-                    <div id="slot-modules" class="masonry"></div>
+                <div id="slot-modules-wrap" class="relative">
+                    <button type="button" onclick="carouselScroll(-1)" aria-label="Scroll left"
+                            class="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#161617] border border-white/10 items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-white/25 shadow-lg shadow-black/40 transition-colors">
+                        <i class="fa-solid fa-chevron-left text-sm"></i>
+                    </button>
+                    <div id="slot-modules" class="carousel-track"></div>
+                    <button type="button" onclick="carouselScroll(1)" aria-label="Scroll right"
+                            class="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#161617] border border-white/10 items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-white/25 shadow-lg shadow-black/40 transition-colors">
+                        <i class="fa-solid fa-chevron-right text-sm"></i>
+                    </button>
                 </div>
                 <div id="slot-hudson" class="mt-8"></div>
             </main>
@@ -449,6 +497,65 @@
 
     function getFavicon(site) {
         return `https://www.google.com/s2/favicons?domain=${encodeURIComponent((site || '').trim())}&sz=64`;
+    }
+
+    // --- Results carousel: horizontal scroll + arrow buttons ---
+    function carouselScroll(direction) {
+        const track = document.getElementById('slot-modules');
+        if (!track) return;
+        const firstCard = track.firstElementChild;
+        const step = (firstCard ? firstCard.getBoundingClientRect().width : 320) + 20;
+        track.scrollBy({ left: direction * step, behavior: 'smooth' });
+    }
+
+    // --- Pokémon-card style holographic tilt ---
+    // One delegated listener pair on the carousel track (rather than one per
+    // card) so newly-streamed-in cards get the effect for free with no extra
+    // wiring per insertion. Tilt angle + glare position both follow the
+    // cursor's position within whichever .card it's currently over; .card's
+    // own ::before/::after (see <style>) render the glare using the
+    // --holo-x/--holo-y custom properties this sets, gated by the
+    // .holo-active class so cards elsewhere on the page are never affected.
+    const HOLO_MAX_TILT_DEG = 14;
+
+    function applyHoloTilt(card, clientX, clientY) {
+        const rect = card.getBoundingClientRect();
+        const x = (clientX - rect.left) / rect.width;
+        const y = (clientY - rect.top) / rect.height;
+        const rotateY = (x - 0.5) * HOLO_MAX_TILT_DEG;
+        const rotateX = (0.5 - y) * HOLO_MAX_TILT_DEG;
+        card.style.transform = `perspective(900px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02,1.02,1.02)`;
+        card.style.setProperty('--holo-x', `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty('--holo-y', `${(y * 100).toFixed(1)}%`);
+    }
+
+    function resetHoloTilt(card) {
+        card.style.transform = '';
+        card.style.removeProperty('--holo-x');
+        card.style.removeProperty('--holo-y');
+        card.classList.remove('holo-active');
+    }
+
+    function initHoloEffect(container) {
+        if (!container || container.dataset.holoInit) return;
+        container.dataset.holoInit = '1';
+        let activeCard = null;
+
+        container.addEventListener('mousemove', (e) => {
+            const card = e.target.closest('.card');
+            if (!card || !container.contains(card)) {
+                if (activeCard) { resetHoloTilt(activeCard); activeCard = null; }
+                return;
+            }
+            if (activeCard && activeCard !== card) resetHoloTilt(activeCard);
+            card.classList.add('holo-active');
+            applyHoloTilt(card, e.clientX, e.clientY);
+            activeCard = card;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            if (activeCard) { resetHoloTilt(activeCard); activeCard = null; }
+        });
     }
 
     function toggleLogsDrawer() {
@@ -1178,10 +1285,10 @@
     }
 
     // Fixed-position placeholder cards (one per aggregate category, created
-    // once and updated in place) - keeps their spot stable in the masonry
-    // flow across re-renders, instead of being torn down and reinserted
-    // (which would jump them to the end and disturb layout) every time new
-    // data streams in.
+    // once and updated in place) - keeps their spot stable in the carousel
+    // across re-renders, instead of being torn down and reinserted (which
+    // would jump them to the end and disturb scroll position) every time
+    // new data streams in.
     const AGGREGATE_DEFS = [
         { id: 'agg-avatars', icon: 'fa-solid fa-images', title: 'Profile pictures' },
         { id: 'agg-names', icon: 'fa-solid fa-signature', title: 'Names' },
@@ -1525,6 +1632,7 @@
         lastScanLogs = logs;
 
         const modulesSlot = document.getElementById('slot-modules');
+        initHoloEffect(modulesSlot);
         ensureAggregatePlaceholders(modulesSlot);
         updateAggregateCards(collectAggregates(logs));
 
@@ -1563,7 +1671,7 @@
         bucketBlocks.forEach(bucket => splitBucketBlock(bucket, target).forEach(insertCard));
 
         // --- Stealer logs / data breaches - a distinct full-width danger
-        // section outside the masonry flow, since its layout (per-machine
+        // section outside the carousel, since its layout (per-machine
         // logins/passwords) doesn't fit the generic card format. ---
         let breachCount = logs.includes("HUDSON ROCK") ? logs.split(/Machine #\d+/).length - 1 : 0;
         if (!renderedKeys.hudson && logs.includes("HUDSON ROCK")) {
