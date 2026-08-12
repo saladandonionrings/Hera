@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hera — digital footprint intelligence by email, username or phone number.">
-    <meta name="theme-color" content="#f7f2e6">
+    <meta name="theme-color" content="#0a0a0b">
     <title>Hera — Web OSINT</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23140b1f'/%3E%3Crect x='7' y='7' width='86' height='86' rx='16' fill='%2314b8a6'/%3E%3Ctext x='50' y='68' font-size='50' font-family='Georgia,serif' font-weight='800' fill='%23fbbf24' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,9 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Bronze/terracotta palette, tuned to read as antique metal & Greek pottery
-        // glaze on a marble ground - replaces the previous dark theme's amber with
-        // something that works as a warm ink accent on a light, high-contrast page.
+        // Bronze/teal brand accents kept from the previous theme (medallion,
+        // primary button) - everything else now sits on a near-black ground
+        // to match the reference layout, instead of the old light marble page.
         tailwind.config = {
             theme: {
                 extend: {
@@ -30,12 +30,6 @@
                             700: '#5c3c1e',
                             800: '#402a15',
                         },
-                        marble: {
-                            50:  '#fefdfb',
-                            100: '#f7f2e6',
-                            200: '#efe7d3',
-                            300: '#e2d6b8',
-                        },
                     },
                 },
             },
@@ -44,39 +38,39 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            color-scheme: light;
-            --accent: 15, 118, 110;
+            color-scheme: dark;
+            --accent: 96, 165, 250;
             --gold: 157, 101, 48;
         }
 
-        * { scrollbar-width: thin; scrollbar-color: #cbb994 transparent; }
+        * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbb994; border-radius: 999px; }
-        ::selection { background: rgba(157, 101, 48, .22); color: #2a2116; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
+        ::selection { background: rgba(96, 165, 250, .28); color: #f4f4f5; }
 
         html { scroll-behavior: smooth; }
         body {
-            background: #f7f2e6;
-            color: #2a2116;
+            background: #0a0a0b;
+            color: #e4e4e7;
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             position: relative;
         }
         /* Soft ambient depth behind the whole page - fixed so it never moves or repaints on scroll/re-render.
-           Warm marble ground with a whisper of Aegean teal and bronze, so the page
-           reads as sunlit stone rather than a flat, uniform cream. */
+           Faint teal/bronze glow low in the black, just enough to keep the page
+           from reading as a flat void. */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
             z-index: -1;
             background:
-                radial-gradient(60rem 34rem at 50% -8%, rgba(15, 118, 110, .07), transparent 62%),
-                radial-gradient(46rem 30rem at 96% 4%, rgba(157, 101, 48, .09), transparent 58%),
+                radial-gradient(60rem 34rem at 50% -8%, rgba(15, 118, 110, .10), transparent 62%),
+                radial-gradient(46rem 30rem at 96% 4%, rgba(157, 101, 48, .07), transparent 58%),
                 radial-gradient(40rem 28rem at 2% 18%, rgba(15, 118, 110, .06), transparent 60%),
-                radial-gradient(55rem 42rem at 50% 115%, rgba(157, 101, 48, .07), transparent 60%),
-                #f7f2e6;
+                radial-gradient(55rem 42rem at 50% 115%, rgba(96, 165, 250, .05), transparent 60%),
+                #0a0a0b;
             pointer-events: none;
         }
         .mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -87,18 +81,18 @@
         .medallion {
             background: radial-gradient(circle at 32% 28%, #2dd4bf, #0f766e 70%);
             border: 1.5px solid rgba(157, 101, 48, .55);
-            box-shadow: 0 0 0 3px rgba(157, 101, 48, .12), inset 0 1px 1px rgba(255,255,255,.35);
+            box-shadow: 0 0 0 3px rgba(157, 101, 48, .18), inset 0 1px 1px rgba(255,255,255,.35);
         }
 
         /* A restrained Greek-key (meander) hairline - used sparingly as a single
            divider, never as a repeating background texture across the page. */
         .meander {
             height: 13px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='13' viewBox='0 0 21 13'%3E%3Cpath d='M0.5 12.5 V2.5 H8.5 V8.5 H16.5 V0.5' fill='none' stroke='%239d6530' stroke-width='1.3' stroke-linecap='square'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='13' viewBox='0 0 21 13'%3E%3Cpath d='M0.5 12.5 V2.5 H8.5 V8.5 H16.5 V0.5' fill='none' stroke='%23bd7f42' stroke-width='1.3' stroke-linecap='square'/%3E%3C/svg%3E");
             background-repeat: repeat-x;
             background-position: center;
             background-size: 21px 13px;
-            opacity: .38;
+            opacity: .3;
         }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -116,15 +110,9 @@
 
         @keyframes glowPulse {
             0% { box-shadow: 0 0 0 0 rgba(var(--accent), .35), 0 0 0 1px rgba(var(--accent), .35) inset; }
-            100% { box-shadow: 0 0 0 18px rgba(var(--accent), 0), 0 0 0 1px rgba(214, 201, 173, .7) inset; }
+            100% { box-shadow: 0 0 0 18px rgba(var(--accent), 0), 0 0 0 1px rgba(255, 255, 255, .1) inset; }
         }
         .glow-in { animation: glowPulse 1.4s cubic-bezier(.16,1,.3,1) both; }
-
-        @keyframes chipIn {
-            0% { opacity: 0; transform: translateY(6px) scale(.9); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .chip-in { animation: chipIn .4s cubic-bezier(.16,1,.3,1) both; }
 
         @keyframes pulseOnce {
             0% { transform: scale(1); }
@@ -147,7 +135,7 @@
         .progress-run { animation: indeterminate 1.2s ease-in-out infinite; }
 
         @keyframes skeletonPulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
-        .skeleton { animation: skeletonPulse 1.6s ease-in-out infinite; background: linear-gradient(90deg, rgba(42,33,22,.05), rgba(42,33,22,.1), rgba(42,33,22,.05)); }
+        .skeleton { animation: skeletonPulse 1.6s ease-in-out infinite; background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.1), rgba(255,255,255,.05)); }
 
         /* "Centered hero" -> "compact bar" transition on first search */
         #hero-outer, #hero-brand, #search-form, #search-icon, #target, #search-btn {
@@ -155,18 +143,18 @@
         }
 
         .card {
-            background: linear-gradient(165deg, #fffdf9, #fbf5e8);
-            border: 1px solid rgba(120, 90, 50, .16);
-            box-shadow: 0 1px 0 0 rgba(255,255,255,.6) inset, 0 14px 28px -18px rgba(93, 68, 34, .35);
+            background: #161617;
+            border: 1px solid rgba(255, 255, 255, .08);
+            box-shadow: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 14px 28px -18px rgba(0, 0, 0, .6);
             border-radius: 1.25rem;
             transition: border-color .25s ease, transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s ease;
         }
         .card:hover {
-            border-color: rgba(15, 118, 110, .35);
+            border-color: rgba(96, 165, 250, .3);
             transform: translateY(-2px);
-            box-shadow: 0 1px 0 0 rgba(255,255,255,.6) inset, 0 18px 34px -18px rgba(93, 68, 34, .4);
+            box-shadow: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 18px 34px -18px rgba(0, 0, 0, .7);
         }
-        .card-flat { background: #f6efdd; border: 1px solid rgba(120, 90, 50, .18); border-radius: 1rem; }
+        .card-flat { background: #1c1c1e; border: 1px solid rgba(255, 255, 255, .08); border-radius: 1rem; }
 
         /* Small uppercase eyebrow used to introduce a group of result cards,
            echoing the header's meander divider without repeating the texture. */
@@ -174,12 +162,31 @@
             display: flex; align-items: center; gap: .65rem;
             font-family: 'JetBrains Mono', ui-monospace, monospace;
             font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-            color: rgba(122, 79, 38, .85);
+            color: rgba(228, 197, 152, .8);
             margin: 0 .25rem .9rem;
         }
         .section-label::after {
             content: ''; flex: 1; height: 1px;
-            background: linear-gradient(90deg, rgba(157, 101, 48, .35), transparent);
+            background: linear-gradient(90deg, rgba(157, 101, 48, .4), transparent);
+        }
+
+        /* Masonry: cards flow top-to-bottom per column and wrap to the next
+           column when full, instead of an aligned grid where every card in a
+           row shares the same height - matches the reference layout, where a
+           tall card (many fields) and a short one (single field) can sit
+           side by side without forcing empty space around either. */
+        .masonry {
+            column-gap: 1.25rem;
+            column-count: 1;
+        }
+        @media (min-width: 768px) { .masonry { column-count: 2; } }
+        @media (min-width: 1280px) { .masonry { column-count: 3; } }
+        .masonry > * {
+            break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+            margin-bottom: 1.25rem;
+            display: block;
+            width: 100%;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -195,33 +202,33 @@
 <body>
 
     <!-- ===== TOP BAR ===== -->
-    <header class="sticky top-0 z-30 bg-[#f7f2e6]/90 backdrop-blur-md border-b border-[#e4d7bb]">
+    <header class="sticky top-0 z-30 bg-[#0a0a0b]/90 backdrop-blur-md border-b border-white/10">
         <div class="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
             <div class="flex items-center gap-2.5">
                 <div class="medallion w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                     <span class="font-display font-bold text-bronze-50 text-[14px]">H</span>
                 </div>
-                <span class="font-display font-semibold text-stone-900 text-[18px] tracking-wide">Hera</span>
+                <span class="font-display font-semibold text-zinc-100 text-[18px] tracking-wide">Hera</span>
             </div>
 
             <div class="flex items-center gap-1.5 sm:gap-3">
                 <span id="status" class="mono text-[11px] font-semibold hidden sm:flex items-center gap-2 text-zinc-500 mr-1">
-                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
                     <span id="status-text">IDLE</span>
                 </span>
                 <button type="button" onclick="toggleGhuntDrawer()" title="Credentials (GHunt / Telegram)"
-                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-700 hover:bg-black/5 transition-colors">
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-key text-sm"></i>
                 </button>
                 <button type="button" onclick="toggleLogsDrawer()" title="View raw output"
-                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-700 hover:bg-black/5 transition-colors">
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-terminal text-sm"></i>
                 </button>
             </div>
         </div>
         <div class="meander"></div>
-        <div class="h-[2px] bg-[#e9dfc6] overflow-hidden">
-            <div id="progress-bar" class="h-full w-1/3 bg-gradient-to-r from-teal-600 to-bronze-500 opacity-0"></div>
+        <div class="h-[2px] bg-white/5 overflow-hidden">
+            <div id="progress-bar" class="h-full w-1/3 bg-gradient-to-r from-teal-500 to-bronze-500 opacity-0"></div>
         </div>
     </header>
 
@@ -234,19 +241,19 @@
                 <div class="medallion w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center">
                     <i class="fa-solid fa-fingerprint text-2xl text-white/90"></i>
                 </div>
-                <h1 class="font-display text-4xl sm:text-5xl font-semibold tracking-wide text-stone-900">Investigate a digital footprint</h1>
-                <p class="text-zinc-600 mt-4 max-w-md mx-auto text-[15px] leading-relaxed">
+                <h1 class="font-display text-4xl sm:text-5xl font-semibold tracking-wide text-zinc-100">Investigate a digital footprint</h1>
+                <p class="text-zinc-400 mt-4 max-w-md mx-auto text-[15px] leading-relaxed">
                     Search an email address, username or phone number across identity, social and breach-intelligence sources.
                 </p>
             </div>
 
             <form id="search-form" class="w-full max-w-2xl" autocomplete="off">
-                <div class="flex items-center gap-2 bg-white border border-[#e4d7bb] rounded-2xl p-2.5 shadow-xl shadow-[#7a4f26]/10 focus-within:border-teal-600/60 focus-within:ring-4 focus-within:ring-teal-600/10 transition-all">
-                    <i id="search-icon" class="fa-solid fa-magnifying-glass text-zinc-400 pl-4 text-lg"></i>
+                <div class="flex items-center gap-2 bg-[#161617] border border-white/10 rounded-2xl p-2.5 shadow-xl shadow-black/40 focus-within:border-teal-500/50 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all">
+                    <i id="search-icon" class="fa-solid fa-magnifying-glass text-zinc-500 pl-4 text-lg"></i>
                     <input id="target" type="text" placeholder="name@domain.com, username or +33612345678" aria-label="Target to investigate: email, username or phone number"
-                           class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-400 text-stone-900 text-lg px-3.5 py-3.5">
+                           class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-lg px-3.5 py-3.5">
                     <button id="search-btn" type="submit"
-                            class="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center gap-2.5 shrink-0 transition-all text-[15px] px-6 py-3.5 shadow-lg shadow-[#5c3c1e]/20 ring-1 ring-bronze-400/40">
+                            class="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center gap-2.5 shrink-0 transition-all text-[15px] px-6 py-3.5 shadow-lg shadow-black/30 ring-1 ring-bronze-400/30">
                         <i id="search-btn-icon" class="fa-solid fa-arrow-right"></i>
                         <span id="search-btn-label">Scan</span>
                     </button>
@@ -267,31 +274,29 @@
             <!-- Export -->
             <div id="export-bar" class="hidden mb-8 flex justify-end gap-2">
                 <button type="button" onclick="exportMarkdown()" title="Export as Markdown"
-                        class="bg-white border border-[#e4d7bb] hover:border-teal-600/50 text-stone-600 hover:text-teal-700 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                        class="bg-[#161617] border border-white/10 hover:border-teal-500/40 text-zinc-400 hover:text-teal-400 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-brands fa-markdown"></i> Markdown
                 </button>
                 <button type="button" onclick="exportPdf()" title="Export as PDF"
-                        class="bg-white border border-[#e4d7bb] hover:border-bronze-400/60 text-stone-600 hover:text-bronze-600 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
+                        class="bg-[#161617] border border-white/10 hover:border-bronze-400/40 text-zinc-400 hover:text-bronze-400 text-[13px] font-medium rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-solid fa-file-pdf"></i> PDF
                 </button>
             </div>
 
-            <!-- Results - fixed, ordered slots so cards are only ever appended into the
-                 right place as they're discovered, never wiped/rebuilt on each update.
-                 Google stays a full-width feature banner; slot-aggregates rolls up
-                 avatars/names/locations cross-referenced from every card found so
-                 far; everything else flows into a responsive multi-column grid
-                 instead of a single narrow stack. -->
-            <main class="space-y-8" aria-live="polite">
+            <!-- Results - a single masonry flow: aggregate summary cards
+                 (profile pictures / names / locations / usernames / emails /
+                 phones) and every per-site card are all children of the same
+                 #slot-modules column container, in discovery order, so they
+                 pack the available width the way the reference layout does
+                 instead of stacking in separate full-width bands. Only the
+                 stealer-logs (breach) block stays outside it, as a distinct
+                 full-width danger section. -->
+            <main aria-live="polite">
                 <div id="slot-loading"></div>
-                <div id="slot-google"></div>
-                <div id="slot-aggregates"></div>
                 <div id="slot-modules-wrap">
-                    <div id="slot-modules-label" class="section-label hidden"><i class="fa-solid fa-layer-group"></i> Modules &amp; sources</div>
-                    <div id="slot-modules" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start"></div>
+                    <div id="slot-modules" class="masonry"></div>
                 </div>
-                <div id="slot-chips"></div>
-                <div id="slot-hudson"></div>
+                <div id="slot-hudson" class="mt-8"></div>
             </main>
         </div>
     </div>
@@ -302,90 +307,90 @@
     </footer>
 
     <!-- ===== LOGS DRAWER ===== -->
-    <div id="logs-overlay" onclick="toggleLogsDrawer()" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"></div>
-    <div id="logs-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[36rem] bg-[#fffdf8] border-l border-[#e4d7bb] z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
-        <div class="flex items-center justify-between px-6 py-5 border-b border-[#e4d7bb] shrink-0">
+    <div id="logs-overlay" onclick="toggleLogsDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
+    <div id="logs-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[36rem] bg-[#111113] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-terminal text-teal-700 text-sm"></i>
-                <span class="text-[15px] text-stone-800 font-semibold">Raw output</span>
+                <i class="fa-solid fa-terminal text-teal-400 text-sm"></i>
+                <span class="text-[15px] text-zinc-100 font-semibold">Raw output</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <button type="button" onclick="copyLogs()" title="Copy" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-700 hover:bg-black/5 transition-colors">
+                <button type="button" onclick="copyLogs()" title="Copy" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-teal-400 hover:bg-white/5 transition-colors">
                     <i id="copy-icon" class="fa-regular fa-copy"></i>
                 </button>
-                <button type="button" onclick="toggleLogsDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-stone-800 hover:bg-black/5 transition-colors">
+                <button type="button" onclick="toggleLogsDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
         </div>
-        <pre id="raw-logs" class="mono flex-1 overflow-y-auto p-6 text-[13px] leading-relaxed text-stone-600">Waiting...</pre>
+        <pre id="raw-logs" class="mono flex-1 overflow-y-auto p-6 text-[13px] leading-relaxed text-zinc-400">Waiting...</pre>
     </div>
 
     <!-- ===== GHUNT AUTH DRAWER ===== -->
-    <div id="ghunt-overlay" onclick="toggleGhuntDrawer()" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"></div>
-    <div id="ghunt-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[30rem] bg-[#fffdf8] border-l border-[#e4d7bb] z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
-        <div class="flex items-center justify-between px-6 py-5 border-b border-[#e4d7bb] shrink-0">
+    <div id="ghunt-overlay" onclick="toggleGhuntDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
+    <div id="ghunt-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[30rem] bg-[#111113] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-key text-teal-700 text-sm"></i>
-                <span class="text-[15px] text-stone-800 font-semibold">Credentials</span>
+                <i class="fa-solid fa-key text-teal-400 text-sm"></i>
+                <span class="text-[15px] text-zinc-100 font-semibold">Credentials</span>
             </div>
-            <button type="button" onclick="toggleGhuntDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-stone-800 hover:bg-black/5 transition-colors">
+            <button type="button" onclick="toggleGhuntDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-white/5 transition-colors">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-8">
             <section class="space-y-5">
-                <h3 class="text-[13px] font-semibold text-stone-700 uppercase tracking-wide">GHunt (Google Identity)</h3>
-                <p class="text-[14px] text-stone-600 leading-relaxed">
+                <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">GHunt (Google Identity)</h3>
+                <p class="text-[14px] text-zinc-400 leading-relaxed">
                     The Google Identity module needs a GHunt session on the server. Install the
-                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-teal-700 hover:text-teal-600 hover:underline">GHunt Companion</a>
+                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-teal-400 hover:text-teal-300 hover:underline">GHunt Companion</a>
                     browser extension, export your logged-in Google session as base64, then paste it below.
                 </p>
                 <textarea id="ghunt-cookies" rows="8" placeholder="Paste base64-encoded credentials here..."
-                          class="w-full bg-[#fbf6ea] border border-[#e4d7bb] rounded-xl p-3.5 text-[13px] mono text-stone-900 outline-none focus:border-teal-600/60 focus:ring-4 focus:ring-teal-600/10 transition-all resize-none"></textarea>
+                          class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"></textarea>
                 <button type="button" id="ghunt-login-btn" onclick="submitGhuntLogin()"
-                        class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/40">
+                        class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/30">
                     <i id="ghunt-login-icon" class="fa-solid fa-right-to-bracket"></i>
                     <span id="ghunt-login-label">Authenticate</span>
                 </button>
                 <div id="ghunt-login-result" class="hidden text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border"></div>
                 <p class="text-[12px] text-zinc-500 leading-relaxed">
-                    This runs <code class="mono bg-black/5 px-1.5 py-0.5 rounded">ghunt login</code> directly on the server, replacing any existing session. Anyone with access to this page can trigger it — keep this deployment private.
+                    This runs <code class="mono bg-white/5 px-1.5 py-0.5 rounded">ghunt login</code> directly on the server, replacing any existing session. Anyone with access to this page can trigger it — keep this deployment private.
                 </p>
             </section>
 
-            <div class="border-t border-[#e4d7bb]"></div>
+            <div class="border-t border-white/10"></div>
 
             <section class="space-y-5">
-                <h3 class="text-[13px] font-semibold text-stone-700 uppercase tracking-wide">Telegram (Phone module)</h3>
-                <p class="text-[14px] text-stone-600 leading-relaxed">
+                <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">Telegram (Phone module)</h3>
+                <p class="text-[14px] text-zinc-400 leading-relaxed">
                     Optional — enables the Telegram registration check on phone number scans. Create your own API app at
-                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-teal-700 hover:text-teal-600 hover:underline">my.telegram.org/apps</a>,
-                    then log in below — Hera saves the API ID/Hash to <code class="mono bg-black/5 px-1 py-0.5 rounded">.env</code> automatically, no manual step needed.
+                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-teal-400 hover:text-teal-300 hover:underline">my.telegram.org/apps</a>,
+                    then log in below — Hera saves the API ID/Hash to <code class="mono bg-white/5 px-1 py-0.5 rounded">.env</code> automatically, no manual step needed.
                 </p>
 
                 <div class="grid grid-cols-2 gap-3">
                     <input id="tg-api-id" type="text" inputmode="numeric" placeholder="API ID"
-                           class="col-span-1 bg-[#fbf6ea] border border-[#e4d7bb] rounded-xl p-3 text-[13px] mono text-stone-900 outline-none focus:border-teal-600/60 focus:ring-4 focus:ring-teal-600/10 transition-all">
+                           class="col-span-1 bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
                     <input id="tg-api-hash" type="text" placeholder="API Hash"
-                           class="col-span-1 bg-[#fbf6ea] border border-[#e4d7bb] rounded-xl p-3 text-[13px] mono text-stone-900 outline-none focus:border-teal-600/60 focus:ring-4 focus:ring-teal-600/10 transition-all">
+                           class="col-span-1 bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
                 </div>
                 <input id="tg-phone" type="tel" placeholder="Your phone number, e.g. +33612345678"
-                       class="w-full bg-[#fbf6ea] border border-[#e4d7bb] rounded-xl p-3 text-[13px] mono text-stone-900 outline-none focus:border-teal-600/60 focus:ring-4 focus:ring-teal-600/10 transition-all">
+                       class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
 
                 <button type="button" id="tg-send-code-btn" onclick="submitTelegramSendCode()"
-                        class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/40">
+                        class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/30">
                     <i id="tg-send-code-icon" class="fa-solid fa-paper-plane"></i>
                     <span id="tg-send-code-label">Send code</span>
                 </button>
 
                 <div id="tg-verify-block" class="hidden space-y-3">
                     <input id="tg-code" type="text" inputmode="numeric" placeholder="Code received on Telegram"
-                           class="w-full bg-[#fbf6ea] border border-[#e4d7bb] rounded-xl p-3 text-[13px] mono text-stone-900 outline-none focus:border-teal-600/60 focus:ring-4 focus:ring-teal-600/10 transition-all">
+                           class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
                     <input id="tg-password" type="password" placeholder="2FA password (only if asked)"
-                           class="w-full bg-[#fbf6ea] border border-[#e4d7bb] rounded-xl p-3 text-[13px] mono text-stone-900 outline-none focus:border-teal-600/60 focus:ring-4 focus:ring-teal-600/10 transition-all">
+                           class="w-full bg-[#1c1c1e] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-teal-500/50 focus:ring-4 focus:ring-teal-500/10 transition-all">
                     <button type="button" id="tg-verify-btn" onclick="submitTelegramVerify()"
-                            class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/40">
+                            class="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl py-3 text-[14px] transition-all flex items-center justify-center gap-2 ring-1 ring-bronze-400/30">
                         <i id="tg-verify-icon" class="fa-solid fa-check"></i>
                         <span id="tg-verify-label">Verify</span>
                     </button>
@@ -393,7 +398,7 @@
 
                 <div id="tg-login-result" class="hidden text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border"></div>
                 <p class="text-[12px] text-zinc-500 leading-relaxed">
-                    This creates a Telegram user session on the server (via Telethon), saved as a <code class="mono bg-black/5 px-1 py-0.5 rounded">.session</code> file and reused for every scan afterwards. Only needs to be done once.
+                    This creates a Telegram user session on the server (via Telethon), saved as a <code class="mono bg-white/5 px-1 py-0.5 rounded">.session</code> file and reused for every scan afterwards. Only needs to be done once.
                 </p>
             </section>
         </div>
@@ -408,19 +413,17 @@
     // Tracks what's already been rendered for the CURRENT scan, so streamed
     // updates only ever insert what's new instead of wiping and rebuilding
     // everything (which is what caused the "page refresh" flicker).
-    let renderedKeys = { google: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set(), aggSignature: '' };
+    let renderedKeys = { hudson: false, modules: new Set() };
 
     function resetRenderState() {
-        renderedKeys = { google: false, hudson: false, chipsCard: false, modules: new Set(), chips: new Set(), aggSignature: '' };
-        ['slot-loading', 'slot-google', 'slot-aggregates', 'slot-modules', 'slot-chips', 'slot-hudson'].forEach(id => {
+        renderedKeys = { hudson: false, modules: new Set() };
+        ['slot-loading', 'slot-modules', 'slot-hudson'].forEach(id => {
             document.getElementById(id).innerHTML = '';
         });
-        document.getElementById('slot-modules-label').classList.add('hidden');
     }
 
     function hasAnyResults() {
-        return renderedKeys.google || renderedKeys.hudson ||
-               renderedKeys.modules.size > 0 || renderedKeys.chips.size > 0;
+        return renderedKeys.hudson || renderedKeys.modules.size > 0;
     }
 
     // Escapes HTML to prevent XSS injection via scraped data (bio, names, etc.)
@@ -466,7 +469,7 @@
         const icon = document.getElementById('copy-icon');
         try {
             await navigator.clipboard.writeText(logsElement.textContent || '');
-            icon.className = 'fa-solid fa-check text-emerald-600';
+            icon.className = 'fa-solid fa-check text-emerald-400';
         } catch (e) {
             icon.className = 'fa-solid fa-xmark text-red-500';
         }
@@ -517,12 +520,12 @@
 
             if (!response.ok) throw new Error(data.error || `Server error (${response.status})`);
 
-            resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${data.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700' : 'bg-red-500/10 border-red-500/30 text-red-700'}`;
+            resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${data.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`;
             resultEl.textContent = data.output || (data.success ? 'Authenticated.' : 'Login failed.');
 
             if (data.success) textarea.value = '';
         } catch (error) {
-            resultEl.className = 'text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border bg-red-500/10 border-red-500/30 text-red-700';
+            resultEl.className = 'text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border bg-red-500/10 border-red-500/30 text-red-400';
             resultEl.textContent = error.message;
         } finally {
             btn.disabled = false;
@@ -535,7 +538,7 @@
 
     function showTelegramResult(message, ok) {
         const resultEl = document.getElementById('tg-login-result');
-        resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${ok ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700' : 'bg-red-500/10 border-red-500/30 text-red-700'}`;
+        resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${ok ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`;
         resultEl.textContent = message;
     }
 
@@ -668,7 +671,7 @@
         heroBrand.style.marginBottom = '0px';
         form.className = 'w-full max-w-md';
         searchIcon.className = 'fa-solid fa-magnifying-glass text-zinc-400 pl-3.5 text-sm';
-        input.className = 'flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-400 text-stone-900 text-sm px-2.5 py-2.5';
+        input.className = 'flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-sm px-2.5 py-2.5';
         btn.className = 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5 ring-1 ring-bronze-400/40';
     }
 
@@ -713,6 +716,16 @@
         let current = null;
 
         for (const line of lines) {
+            // A blank line always closes off whatever block is currently
+            // open. Module blocks only get a START marker ("  › TITLE"), not
+            // an end one, so without this a free-standing success line
+            // printed straight to stdout (no header of its own - the
+            // concurrent existence checks in main.py) would otherwise get
+            // glued onto whichever real module happened to run right before
+            // it. main.py prints a blank line before each such batch
+            // specifically so this reset lands in the right place.
+            if (line.trim() === '') { current = null; continue; }
+
             const headerMatch = line.match(/^\s*›\s*(.+?)\s*$/);
             if (headerMatch) {
                 current = { title: headerMatch[1].trim(), entries: [] };
@@ -755,52 +768,119 @@
         return blocks;
     }
 
+    // Fallback glyph + tint for a per-site card's small icon badge, used only
+    // when a real favicon isn't available (see siteDomain/siteIconHtml below) -
+    // most cards show the site's actual favicon instead, which reads as far
+    // more recognizable across the dozens of different services Hera checks
+    // than a hand-picked icon ever could.
     function moduleVisual(title) {
         const t = title.toUpperCase();
-        if (t.includes('PROFILE PICTURES')) return { icon: 'fa-solid fa-images', ring: 'bg-bronze-500/10 border-bronze-500/25 text-bronze-600', accent: '157,101,48' };
-        if (t === 'GITHUB') return { icon: 'fa-brands fa-github', ring: 'bg-stone-900/10 border-stone-900/25 text-stone-900', accent: '28,25,23' };
-        if (t.includes('PROTON')) return { icon: 'fa-solid fa-lock', ring: 'bg-violet-500/10 border-violet-500/25 text-violet-600', accent: '124,58,237', favicon: 'https://proton.me/favicon.ico' };
-        if (t.includes('WORDPRESS') || t.includes('GRAVATAR')) return { icon: 'fa-brands fa-wordpress', ring: 'bg-sky-500/10 border-sky-500/25 text-sky-600', accent: '2,132,199' };
-        if (t.includes('SNAPCHAT')) return { icon: 'fa-brands fa-snapchat', ring: 'bg-yellow-400/10 border-yellow-400/25 text-yellow-600', accent: '202,138,4' };
-        if (t.includes('VIVINO')) return { icon: 'fa-solid fa-wine-glass', ring: 'bg-rose-500/10 border-rose-500/25 text-rose-600', accent: '225,29,72' };
-        if (t.includes('FACEBOOK')) return { icon: 'fa-brands fa-facebook', ring: 'bg-blue-500/10 border-blue-500/25 text-blue-600', accent: '37,99,235' };
-        if (t.includes('INSTAGRAM')) return { icon: 'fa-brands fa-instagram', ring: 'bg-fuchsia-500/10 border-fuchsia-500/25 text-fuchsia-600', accent: '192,38,211' };
-        if (t.includes('SOUNDCLOUD')) return { icon: 'fa-brands fa-soundcloud', ring: 'bg-orange-500/10 border-orange-500/25 text-orange-600', accent: '234,88,12' };
-        if (t.includes('YOUTUBE')) return { icon: 'fa-brands fa-youtube', ring: 'bg-red-500/10 border-red-500/25 text-red-600', accent: '220,38,38' };
-        if (t.includes('TIKTOK')) return { icon: 'fa-brands fa-tiktok', ring: 'bg-stone-900/10 border-stone-900/25 text-stone-900', accent: '28,25,23' };
-        if (t.includes('REDDIT')) return { icon: 'fa-brands fa-reddit-alien', ring: 'bg-orange-600/10 border-orange-600/25 text-orange-700', accent: '215,89,26' };
-        if (t.includes('CALENDLY')) return { icon: 'fa-solid fa-calendar-days', ring: 'bg-blue-600/10 border-blue-600/25 text-blue-700', accent: '0,107,255' };
-        if (t.includes('GOOGLE')) return { icon: 'fa-brands fa-google', ring: 'bg-indigo-500/10 border-indigo-500/25 text-indigo-600', accent: '79,70,229' };
-        if (t.includes('PHONE')) return { icon: 'fa-solid fa-phone', ring: 'bg-teal-500/10 border-teal-500/25 text-teal-700', accent: '15,118,110' };
-        if (t.includes('LEAKCHECK')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-600', accent: '220,38,38', favicon: 'https://leakcheck.io/favicon.ico' };
-        if (t.includes('BREACH')) return { icon: 'fa-solid fa-shield-halved', ring: 'bg-red-500/10 border-red-500/25 text-red-600', accent: '220,38,38' };
-        return { icon: 'fa-solid fa-database', ring: 'bg-bronze-500/10 border-bronze-500/25 text-bronze-600', accent: '157,101,48' };
+        if (t === 'GITHUB') return { icon: 'fa-brands fa-github' };
+        if (t.includes('PROTON')) return { icon: 'fa-solid fa-lock' };
+        if (t.includes('WORDPRESS') || t.includes('GRAVATAR')) return { icon: 'fa-brands fa-wordpress' };
+        if (t.includes('SNAPCHAT')) return { icon: 'fa-brands fa-snapchat' };
+        if (t.includes('VIVINO')) return { icon: 'fa-solid fa-wine-glass' };
+        if (t.includes('FACEBOOK')) return { icon: 'fa-brands fa-facebook' };
+        if (t.includes('INSTAGRAM')) return { icon: 'fa-brands fa-instagram' };
+        if (t.includes('SOUNDCLOUD')) return { icon: 'fa-brands fa-soundcloud' };
+        if (t.includes('YOUTUBE')) return { icon: 'fa-brands fa-youtube' };
+        if (t.includes('TIKTOK')) return { icon: 'fa-brands fa-tiktok' };
+        if (t.includes('REDDIT')) return { icon: 'fa-brands fa-reddit-alien' };
+        if (t.includes('CALENDLY')) return { icon: 'fa-solid fa-calendar-days' };
+        if (t.includes('GOOGLE')) return { icon: 'fa-brands fa-google' };
+        if (t.includes('PHONE')) return { icon: 'fa-solid fa-phone' };
+        if (t.includes('LEAKCHECK') || t.includes('BREACH')) return { icon: 'fa-solid fa-shield-halved' };
+        if (t.includes('GITLAB')) return { icon: 'fa-brands fa-gitlab' };
+        if (t.includes('BITBUCKET')) return { icon: 'fa-brands fa-bitbucket' };
+        if (t.includes('DOCKER')) return { icon: 'fa-brands fa-docker' };
+        if (t.includes('NPM')) return { icon: 'fa-brands fa-npm' };
+        if (t.includes('STEAM')) return { icon: 'fa-brands fa-steam' };
+        if (t.includes('TWITCH')) return { icon: 'fa-brands fa-twitch' };
+        if (t.includes('XBOX')) return { icon: 'fa-brands fa-xbox' };
+        if (t.includes('DISCORD')) return { icon: 'fa-brands fa-discord' };
+        if (t.includes('TELEGRAM')) return { icon: 'fa-brands fa-telegram' };
+        if (t.includes('SPOTIFY')) return { icon: 'fa-brands fa-spotify' };
+        if (t.includes('TWITTER') || t.includes('X (TWITTER)')) return { icon: 'fa-brands fa-x-twitter' };
+        if (t.includes('MASTODON')) return { icon: 'fa-brands fa-mastodon' };
+        if (t.includes('PATREON')) return { icon: 'fa-brands fa-patreon' };
+        if (t.includes('MEDIUM')) return { icon: 'fa-brands fa-medium' };
+        if (t.includes('TUMBLR')) return { icon: 'fa-brands fa-tumblr' };
+        if (t.includes('PINTEREST')) return { icon: 'fa-brands fa-pinterest' };
+        if (t.includes('VIMEO')) return { icon: 'fa-brands fa-vimeo' };
+        if (t.includes('BEHANCE')) return { icon: 'fa-brands fa-behance' };
+        if (t.includes('FLICKR')) return { icon: 'fa-brands fa-flickr' };
+        if (t.includes('TRELLO')) return { icon: 'fa-brands fa-trello' };
+        if (t.includes('WATTPAD')) return { icon: 'fa-brands fa-wattpad' };
+        if (t.includes('GOODREAD')) return { icon: 'fa-brands fa-goodreads' };
+        if (t.includes('MICROSOFT')) return { icon: 'fa-brands fa-microsoft' };
+        if (t.includes('ADOBE')) return { icon: 'fa-brands fa-adobe' };
+        if (t.includes('DUOLINGO')) return { icon: 'fa-solid fa-dove' };
+        if (t.includes('CHESS')) return { icon: 'fa-solid fa-chess-pawn' };
+        if (t.includes('LICHESS')) return { icon: 'fa-solid fa-chess-knight' };
+        if (t.includes('ROBLOX')) return { icon: 'fa-solid fa-cube' };
+        if (t.includes('MINECRAFT') || t.includes('MOJANG')) return { icon: 'fa-solid fa-cubes' };
+        if (t.includes('HACKERNEWS') || t.includes('YCOMBINATOR')) return { icon: 'fa-brands fa-hacker-news' };
+        return { icon: 'fa-solid fa-globe' };
     }
 
-    function entryVisual(icon) {
+    // A handful of rich modules whose block title isn't itself a domain
+    // (unlike e.g. "chess.com" or "ea.com", printed verbatim as the site
+    // identifier by the concurrent existence checks) - mapped once here so
+    // their cards get a real favicon too, the same as everything else.
+    const KNOWN_MODULE_DOMAINS = {
+        'GITHUB': 'github.com', 'PROTONMAIL': 'proton.me',
+        'WORDPRESS / GRAVATAR': 'gravatar.com', 'SNAPCHAT DEEP ANALYSIS': 'snapchat.com',
+        'VIVINO': 'vivino.com', 'FACEBOOK': 'facebook.com', 'INSTAGRAM': 'instagram.com',
+        'SOUNDCLOUD': 'soundcloud.com', 'YOUTUBE DEEP ANALYSIS': 'youtube.com',
+        'TIKTOK': 'tiktok.com', 'REDDIT': 'reddit.com', 'CALENDLY': 'calendly.com',
+        'GOOGLE IDENTITY': 'google.com', 'LEAKCHECK': 'leakcheck.io',
+    };
+
+    // The favicon is derived from wherever the card's own profile URL points
+    // (most reliable - it's the exact site that was actually hit), falling
+    // back to the small curated map above, and finally to the block title
+    // itself when it already looks like a bare domain ("chess.com").
+    function siteDomain(title, urlEntry) {
+        const known = KNOWN_MODULE_DOMAINS[title.toUpperCase()];
+        if (known) return known;
+        if (urlEntry) {
+            try { return new URL(urlEntry.value).hostname.replace(/^www\./, ''); } catch (e) { /* fall through */ }
+        }
+        const bare = title.trim().toLowerCase();
+        if (/^[\w-]+(\.[\w-]+)+$/.test(bare)) return bare;
+        return null;
+    }
+
+    function siteIconHtml(domain, vis) {
+        if (domain) {
+            return `<img src="${getFavicon(domain)}" alt="" class="w-4 h-4 rounded-sm object-contain shrink-0" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><i class="${vis.icon} text-[12px] text-zinc-500 shrink-0" style="display:none"></i>`;
+        }
+        return `<i class="${vis.icon} text-[12px] text-zinc-500 shrink-0"></i>`;
+    }
+
+    function fieldValueColor(icon) {
         switch (icon) {
-            case '✓': return { cls: 'text-emerald-600', ic: 'fa-solid fa-check' };
-            case '!': return { cls: 'text-bronze-600', ic: 'fa-solid fa-triangle-exclamation' };
-            case '×': return { cls: 'text-red-600', ic: 'fa-solid fa-xmark' };
-            case '○': return { cls: 'text-zinc-400', ic: 'fa-solid fa-circle-minus' };
-            default: return { cls: 'text-sky-600', ic: 'fa-solid fa-circle-dot' };
+            case '!': return 'text-amber-400';
+            case '×': return 'text-red-400';
+            case '○': return 'text-zinc-600';
+            default: return 'text-zinc-200';
         }
     }
 
     function renderValue(value) {
         if (/^https?:\/\//i.test(value)) {
             const href = safeUrl(value);
-            if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-teal-700 hover:text-teal-600 hover:underline break-all">${escapeHtml(value)}</a>`;
+            if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 hover:underline break-all">${escapeHtml(value)}</a>`;
         }
         return `<span class="break-words">${escapeHtml(value)}</span>`;
     }
 
     // Profile-picture-shaped fields read as unreadable wall-of-URL text like
-    // any other link, and cramming a tall image inline next to its text
+    // any other line, and cramming a tall image inline next to its text
     // label baseline-aligns them (label ends up looking like it's stuck
     // under the picture) - pulled out of the normal row list entirely and
-    // shown as a framed thumbnail up front instead, before anything else.
-    // A blank key (used when a module has nothing meaningful to caption the
+    // shown as a small round thumbnail next to the card header instead. A
+    // blank key (used when a module has nothing meaningful to caption the
     // picture with) plus a URL value counts too, and so does any "X Avatar"
     // key (used when a single block collects avatars from several
     // different sites, e.g. blackbird's "PROFILE PICTURES" gallery, and
@@ -822,15 +902,19 @@
         return entry.key.trim().replace(/\s*avatar$/i, '').trim();
     }
 
+    // Larger round thumbnail used in the aggregate "Profile pictures"
+    // gallery card (one row combining every avatar found across every
+    // module), as opposed to the small one next to each individual card's
+    // own header (see renderModuleBlockCard).
     function renderAvatarHero(value, label) {
         const src = safeUrl(value);
         if (!src) return '';
         const caption = label
-            ? `<span class="block mt-1 text-center text-[10px] text-zinc-500 truncate max-w-[6rem]">${escapeHtml(label)}</span>`
+            ? `<span class="block mt-1 text-center text-[10px] text-zinc-500 truncate max-w-[4.5rem]">${escapeHtml(label)}</span>`
             : '';
         return `<div class="flex flex-col items-center shrink-0">
-            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block rounded-2xl border border-[#e4d7bb] overflow-hidden bg-stone-100 hover:border-teal-600/50 transition-colors shadow-sm">
-                <img src="${src}" alt="" class="w-24 h-24 object-cover block" onerror="this.closest('div').style.display='none'">
+            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-[#1c1c1e] hover:border-sky-400/50 transition-colors">
+                <img src="${src}" alt="" class="w-full h-full object-cover block" onerror="this.closest('div').style.display='none'">
             </a>
             ${caption}
         </div>`;
@@ -842,13 +926,13 @@
         const glyph = faviconUrl
             ? `<img src="${faviconUrl}" alt="" class="w-5 h-5 rounded-sm object-contain" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><i class="${icon} text-base" style="display:none"></i>`
             : `<i class="${icon} text-base"></i>`;
-        return `<div class="flex items-center gap-3.5 mb-5">
-            <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${iconWrap}">
+        return `<div class="flex items-center gap-3.5 mb-4">
+            <div class="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${iconWrap}">
                 ${glyph}
             </div>
             <div class="min-w-0">
-                <h3 class="text-[15px] font-semibold ${titleClass || 'text-stone-800'} tracking-tight truncate">${title}</h3>
-                ${subtitle ? `<p class="mono text-xs text-zinc-600 truncate mt-0.5">${subtitle}</p>` : ''}
+                <h3 class="text-[14px] font-semibold ${titleClass || 'text-zinc-100'} tracking-tight truncate">${title}</h3>
+                ${subtitle ? `<p class="mono text-xs text-zinc-500 truncate mt-0.5">${subtitle}</p>` : ''}
             </div>
         </div>`;
     }
@@ -865,33 +949,30 @@
             html += `<span class="text-[12.5px] font-medium ${tagClass} rounded-lg px-2.5 py-1">${escapeHtml(item)}</span>`;
         });
         if (moreCount) {
-            html += `<span class="text-[12.5px] font-medium bg-black/5 border border-zinc-300 text-zinc-500 rounded-lg px-2.5 py-1">+${moreCount} more</span>`;
+            html += `<span class="text-[12.5px] font-medium bg-white/5 border border-white/10 text-zinc-500 rounded-lg px-2.5 py-1">+${moreCount} more</span>`;
         }
         html += `</div>`;
         return html;
     }
 
-    // A single •/✓/!/×/○ field row - extracted so both the always-visible
-    // rows and the collapsed "+N more fields" section below can share it.
+    // A single •/✓/!/×/○ field, rendered as a plain inline "Label: value"
+    // line - extracted so both the always-visible rows and the collapsed
+    // "+N more fields" section below can share it.
     function renderFieldRow(entry) {
-        const ev = entryVisual(entry.icon);
         const isTagList = entry.key.toLowerCase() === 'breaches';
-        let html = `<div class="py-3.5 border-b border-[#ece1c6] last:border-0">
-            <div class="flex items-start gap-3">
-                <i class="${ev.ic} ${ev.cls} text-sm mt-0.5 shrink-0 w-4 text-center"></i>
-                <div class="min-w-0 flex-1">
-                    <span class="mono text-[11px] uppercase tracking-wider text-zinc-500">${escapeHtml(entry.key)}</span>
-                    ${isTagList
-                        ? renderTagList(entry.value, 'bg-red-500/10 border border-red-500/20 text-red-700')
-                        : `<div class="text-[15px] text-stone-800 mt-0.5">${renderValue(entry.value)}</div>`}`;
+        let html = `<div class="py-1 text-[13px] leading-snug">
+            <span class="text-zinc-500">${escapeHtml(entry.key)}:</span>`;
+        html += isTagList
+            ? renderTagList(entry.value, 'bg-red-500/10 border border-red-500/20 text-red-400')
+            : ` <span class="${fieldValueColor(entry.icon)} break-words">${renderValue(entry.value)}</span>`;
         if (entry.subs.length) {
-            html += `<div class="mt-2.5 space-y-1.5 border-l-2 border-[#ece1c6] pl-3">`;
+            html += `<div class="mt-1.5 space-y-1 border-l-2 border-white/10 pl-2.5 ml-0.5">`;
             entry.subs.forEach(sub => {
-                html += `<div class="text-[13px]"><span class="text-zinc-500">${escapeHtml(sub.key)}</span> <span class="text-zinc-400">—</span> <span class="text-stone-600">${renderValue(sub.value)}</span></div>`;
+                html += `<div class="text-[12px]"><span class="text-zinc-500">${escapeHtml(sub.key)}</span> <span class="text-zinc-700">—</span> <span class="text-zinc-400">${renderValue(sub.value)}</span></div>`;
             });
             html += `</div>`;
         }
-        html += `</div></div></div>`;
+        html += `</div>`;
         return html;
     }
 
@@ -899,44 +980,79 @@
     // module with a dozen data points doesn't dwarf every card around it.
     const VISIBLE_FIELD_COUNT = 4;
 
+    // Best-effort "@handle" for a per-site card - the last path segment of
+    // its profile URL. Hera's simpler existence-check modules don't return a
+    // distinct username field of their own (only a hit/miss + the profile
+    // URL), so this is the closest available proxy - skipped where the
+    // segment is clearly not a handle (numeric IDs, file-like paths).
+    function deriveHandle(url) {
+        try {
+            const u = new URL(url);
+            const segments = u.pathname.split('/').filter(Boolean);
+            if (!segments.length) return '';
+            const last = decodeURIComponent(segments[segments.length - 1]).replace(/^@/, '');
+            if (!last || /^\d+$/.test(last) || last.includes('.')) return '';
+            return last;
+        } catch (e) { return ''; }
+    }
+
     function renderModuleBlockCard(block, delayMs) {
         const vis = moduleVisual(block.title);
 
-        // Avatar-shaped entries are pulled out and shown first, as a framed
-        // hero image above everything else, instead of wherever they happen
-        // to fall in the field order.
+        // The avatar is pulled out and shown next to the card's own header,
+        // instead of wherever it happens to fall in the field order.
         const avatarEntries = block.entries.filter(isAvatarEntry);
         let otherEntries = block.entries.filter(e => !isAvatarEntry(e));
-        const avatarThumbs = avatarEntries.map(e => renderAvatarHero(e.value, avatarLabel(e))).filter(Boolean);
-        const avatarHtml = avatarThumbs.length
-            ? `<div class="flex justify-center flex-wrap gap-3 mb-5">${avatarThumbs.join('')}</div>`
-            : '';
+        const avatarSrc = avatarEntries.length ? safeUrl(avatarEntries[0].value) : '';
 
-        // A name field and a profile URL (the first ✓ line pointing at an
-        // http(s) link) get pulled out too and headlined above the rest of
-        // the fields, the way every other card in the app leads with who/what
-        // it found rather than burying it as just another row.
-        let nameEntry = null, urlEntry = null;
+        // A name, a profile URL (the first ✓ line pointing at an http(s)
+        // link), a bio/description and a follower-style stat line all get
+        // pulled out too and given their own spot above the plain field
+        // list, the way every card in the reference layout leads with
+        // who/what it found rather than burying it as just another row.
+        let nameEntry = null, urlEntry = null, descEntry = null, statsEntry = null;
         otherEntries = otherEntries.filter(e => {
             const key = e.key.trim();
             const value = e.value.trim();
-            if (!nameEntry && /name$/i.test(key) && value && !/^(none|private|unknown)$/i.test(value)) {
-                nameEntry = e;
-                return false;
-            }
-            if (!urlEntry && e.icon === '✓' && /^https?:\/\//i.test(value)) {
-                urlEntry = e;
-                return false;
-            }
+            if (!nameEntry && /name$/i.test(key) && value && !/^(none|private|unknown)$/i.test(value)) { nameEntry = e; return false; }
+            if (!urlEntry && e.icon === '✓' && /^https?:\/\//i.test(value)) { urlEntry = e; return false; }
+            if (!descEntry && /^(bio|description|about)$/i.test(key) && value && value.toLowerCase() !== 'none') { descEntry = e; return false; }
+            if (!statsEntry && /^activity$/i.test(key) && value) { statsEntry = e; return false; }
             return true;
         });
 
-        const headlineHtml = (nameEntry || urlEntry)
-            ? `<div class="text-center mb-5">
-                ${nameEntry ? `<p class="text-[17px] font-bold text-stone-900 tracking-tight break-words">${escapeHtml(nameEntry.value)}</p>` : ''}
-                ${urlEntry ? `<div class="mt-1 text-[13px] break-all">${renderValue(urlEntry.value)}</div>` : ''}
+        const domain = siteDomain(block.title, urlEntry);
+        const handle = urlEntry ? deriveHandle(urlEntry.value) : '';
+
+        const headerRow = `<div class="flex items-center gap-1.5 min-w-0">
+            ${siteIconHtml(domain, vis)}
+            ${urlEntry
+                ? `<a href="${safeUrl(urlEntry.value)}" target="_blank" rel="noopener noreferrer" class="uppercase text-[12.5px] font-semibold tracking-wide text-sky-400 hover:text-sky-300 hover:underline truncate">${escapeHtml(block.title)}</a><i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-zinc-600 shrink-0"></i>`
+                : `<span class="uppercase text-[12.5px] font-semibold tracking-wide text-zinc-400 truncate">${escapeHtml(block.title)}</span>`}
+        </div>
+        ${handle ? `<p class="text-[12.5px] text-zinc-500 truncate mt-0.5">@${escapeHtml(handle)}</p>` : ''}`;
+
+        const headHtml = avatarSrc
+            ? `<div class="flex items-start gap-3 mb-1">
+                <a href="${avatarSrc}" target="_blank" rel="noopener noreferrer" class="shrink-0 w-11 h-11 rounded-full overflow-hidden border border-white/10 bg-[#1c1c1e]">
+                    <img src="${avatarSrc}" alt="" class="w-full h-full object-cover" onerror="this.closest('a').style.display='none'">
+                </a>
+                <div class="min-w-0 flex-1 pt-1">${headerRow}</div>
             </div>`
-            : '';
+            : `<div class="mb-1">${headerRow}</div>`;
+
+        const nameHtml = nameEntry ? `<p class="text-[15.5px] font-semibold text-zinc-50 mt-2.5 break-words">${escapeHtml(nameEntry.value)}</p>` : '';
+        const descHtml = descEntry ? `<p class="text-[13px] text-zinc-400 mt-1 leading-relaxed break-words">${escapeHtml(descEntry.value)}</p>` : '';
+
+        let statsHtml = '';
+        if (statsEntry) {
+            const parts = statsEntry.value.split('/').map(s => s.trim()).filter(Boolean);
+            statsHtml = `<div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[13px]">` + parts.map(p => {
+                const m = p.match(/^([\d][\d,.]*[kKmMbB]?)\s+(.+)$/);
+                if (!m) return `<span class="text-zinc-500">${escapeHtml(p)}</span>`;
+                return `<span><span class="font-semibold text-zinc-100">${escapeHtml(m[1])}</span> <span class="text-zinc-500">${escapeHtml(m[2])}</span></span>`;
+            }).join('') + `</div>`;
+        }
 
         const visibleEntries = otherEntries.slice(0, VISIBLE_FIELD_COUNT);
         const extraEntries = otherEntries.slice(VISIBLE_FIELD_COUNT);
@@ -944,42 +1060,87 @@
 
         let extraHtml = '';
         if (extraEntries.length) {
-            extraHtml = `<details class="group ${rows ? 'border-t border-[#ece1c6]' : ''} mt-1">
-                <summary class="list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 py-3 cursor-pointer text-[13px] font-medium text-teal-700 hover:text-teal-600 select-none">
-                    <i class="fa-solid fa-chevron-right text-[10px] transition-transform group-open:rotate-90"></i>
+            extraHtml = `<details class="group mt-1.5">
+                <summary class="list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 py-1.5 cursor-pointer text-[12.5px] font-medium text-zinc-500 hover:text-zinc-300 select-none">
+                    <i class="fa-solid fa-chevron-right text-[9px] transition-transform group-open:rotate-90"></i>
                     <span>+${extraEntries.length} more field${extraEntries.length > 1 ? 's' : ''}</span>
                 </summary>
-                <div>${extraEntries.map(renderFieldRow).join('')}</div>
+                <div class="mt-1">${extraEntries.map(renderFieldRow).join('')}</div>
             </details>`;
         }
 
-        return `<div class="reveal-in glow-in card p-6" style="--accent:${vis.accent};border-left:3px solid rgba(${vis.accent},.55);animation-delay:${delayMs || 0}ms">
-            ${cardHeader(vis.icon, vis.ring, block.title, null, vis.favicon)}
-            ${avatarHtml}
-            ${headlineHtml}
-            <div>${rows}</div>
+        const bodyTopMargin = (nameHtml || descHtml || statsHtml) ? 'mt-3' : 'mt-2.5';
+        return `<div class="reveal-in glow-in card p-5" style="--accent:96,165,250;animation-delay:${delayMs || 0}ms">
+            ${headHtml}
+            ${nameHtml}
+            ${descHtml}
+            ${statsHtml}
+            <div class="${bodyTopMargin}">${rows}</div>
             ${extraHtml}
         </div>`;
     }
 
-    // --- Aggregate summary cards (profile pictures / names / locations found
-    // across every module block, mirrored regardless of skipTitles so a
-    // block like blackbird's own "PROFILE PICTURES" gallery or a not-found
-    // Google Identity block can still contribute its avatar/name to the
-    // cross-site summary even where it's not shown as its own per-site card).
+    // Two titles inside blackbird.py's own "SOCIAL MEDIAS PRESENCE" sweep
+    // collide with a dedicated, richer module elsewhere in the same
+    // username scan (GitHubScanner / SnapchatScanner) - excluded here the
+    // same way blackbird.py itself already excludes Instagram/TikTok/
+    // SoundCloud/Reddit from that sweep, so the richer card is the only one
+    // that ever renders for these two.
+    const SPLIT_EXCLUDE_KEYS = new Set(['github', 'snapchat']);
+
+    function normalizeSiteKey(title) {
+        return title.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    // Titles whose own entries are each an independent site hit (a broad
+    // sweep, not one cohesive profile) - Maigret's site-by-site results, and
+    // the "bucket" blocks the concurrent existence checks in main.py get
+    // grouped under (they print with no module_header of their own, so
+    // main.py's own explicit header call collects them together). Each
+    // entry becomes its own single-field card instead of one giant card
+    // with dozens of unrelated fields, matching how every other found site
+    // gets its own card.
+    const SPLIT_TITLES = new Set(['MAIGRET', '📧 SOCIAL MEDIAS', 'SOCIAL MEDIAS PRESENCE', 'EMAIL TO SOCIAL MEDIA']);
+
+    // Blocks that contribute no card of their own - PROFILE PICTURES only
+    // ever feeds the avatar aggregate, HUDSON ROCK is rendered separately as
+    // a full-width breach section (see the stealer-logs step below).
+    const HIDE_TITLES = ['HUDSON ROCK', 'PROFILE PICTURES'];
+
+    function splitBucketBlock(block, target) {
+        const isEmail = !!target && target.includes('@');
+        const targetKey = isEmail ? 'Email' : 'Username';
+        return block.entries
+            .filter(e => e.icon === '✓' && e.key.trim() && !SPLIT_EXCLUDE_KEYS.has(normalizeSiteKey(e.key)))
+            .map(e => {
+                const value = e.value.trim();
+                const isUrl = /^https?:\/\//i.test(value);
+                const entries = [{ icon: '✓', key: isUrl ? 'Profile' : 'Status', value, subs: e.subs || [] }];
+                if (target) entries.push({ icon: '•', key: targetKey, value: target, subs: [] });
+                return { title: e.key.trim(), entries };
+            });
+    }
+
+    // --- Aggregate summary (profile pictures / names / locations / emails /
+    // usernames / phones found across every module block) - collected
+    // regardless of HIDE_TITLES/SPLIT_TITLES, so e.g. blackbird's own
+    // "PROFILE PICTURES" gallery or a Maigret hit's URL still contributes to
+    // the cross-site summary even where it isn't shown as its own card.
     function collectAggregates(logs) {
         const blocks = parseModuleBlocks(logs);
         const avatars = new Map(); // safe src -> caption
         const names = new Set();
         const locations = new Set();
+        const emails = new Set();
+        const phones = new Set();
+        const usernames = new Set();
 
         blocks.forEach(block => {
+            let blockUrl = null;
             block.entries.forEach(entry => {
                 if (isAvatarEntry(entry)) {
                     const src = safeUrl(entry.value);
-                    if (src && !avatars.has(src)) {
-                        avatars.set(src, avatarLabel(entry) || block.title);
-                    }
+                    if (src && !avatars.has(src)) avatars.set(src, avatarLabel(entry) || block.title);
                     return;
                 }
                 const key = entry.key.trim();
@@ -989,11 +1150,25 @@
                     names.add(value);
                 } else if (/^(location|region)$/i.test(key) && !/^unknown$/i.test(value)) {
                     locations.add(value);
+                } else if (/^email$/i.test(key) && value.includes('@')) {
+                    emails.add(value);
+                } else if (/^phone(\s*number)?$/i.test(key)) {
+                    phones.add(value);
+                } else if (/^username$/i.test(key)) {
+                    usernames.add(value);
                 }
+                if (!blockUrl && entry.icon === '✓' && /^https?:\/\//i.test(value)) blockUrl = value;
             });
+            if (blockUrl) {
+                const handle = deriveHandle(blockUrl);
+                if (handle) usernames.add(handle);
+            }
         });
 
-        return { avatars, names: [...names], locations: [...locations] };
+        return {
+            avatars, names: [...names], locations: [...locations],
+            emails: [...emails], phones: [...phones], usernames: [...usernames],
+        };
     }
 
     function renderAggregateTags(items, tagClass) {
@@ -1002,44 +1177,47 @@
         ).join('')}</div>`;
     }
 
-    function renderAggregateCards(agg) {
-        const cards = [];
+    // Fixed-position placeholder cards (one per aggregate category, created
+    // once and updated in place) - keeps their spot stable in the masonry
+    // flow across re-renders, instead of being torn down and reinserted
+    // (which would jump them to the end and disturb layout) every time new
+    // data streams in.
+    const AGGREGATE_DEFS = [
+        { id: 'agg-avatars', icon: 'fa-solid fa-images', title: 'Profile pictures' },
+        { id: 'agg-names', icon: 'fa-solid fa-signature', title: 'Names' },
+        { id: 'agg-locations', icon: 'fa-solid fa-location-dot', title: 'Locations' },
+        { id: 'agg-emails', icon: 'fa-solid fa-envelope', title: 'Emails' },
+        { id: 'agg-usernames', icon: 'fa-solid fa-at', title: 'Usernames' },
+        { id: 'agg-phones', icon: 'fa-solid fa-phone', title: 'Phones' },
+    ];
 
-        if (agg.avatars.size > 0) {
-            const thumbs = [...agg.avatars.entries()].map(([src, label]) => renderAvatarHero(src, label)).join('');
-            cards.push(`<div class="reveal-in card p-6">
-                ${cardHeader('fa-solid fa-images', 'bg-bronze-500/10 border-bronze-500/25 text-bronze-600', 'Profile pictures', `${agg.avatars.size} found`)}
-                <div class="flex flex-wrap gap-3">${thumbs}</div>
-            </div>`);
-        }
-        if (agg.names.length > 0) {
-            cards.push(`<div class="reveal-in card p-6">
-                ${cardHeader('fa-solid fa-signature', 'bg-teal-500/10 border-teal-500/25 text-teal-700', 'Names', `${agg.names.length} found`)}
-                ${renderAggregateTags(agg.names, 'bg-teal-500/10 border border-teal-500/20 text-teal-700')}
-            </div>`);
-        }
-        if (agg.locations.length > 0) {
-            cards.push(`<div class="reveal-in card p-6">
-                ${cardHeader('fa-solid fa-location-dot', 'bg-indigo-500/10 border-indigo-500/25 text-indigo-600', 'Locations', `${agg.locations.length} found`)}
-                ${renderAggregateTags(agg.locations, 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-700')}
-            </div>`);
-        }
-
-        if (!cards.length) return '';
-        return `<div class="grid grid-cols-1 md:grid-cols-3 gap-5">${cards.join('')}</div>`;
+    function ensureAggregatePlaceholders(modulesSlot) {
+        if (document.getElementById(AGGREGATE_DEFS[0].id)) return;
+        const html = AGGREGATE_DEFS.map(def =>
+            `<div id="${def.id}" class="reveal-in card p-5" style="display:none"></div>`
+        ).join('');
+        modulesSlot.insertAdjacentHTML('afterbegin', html);
     }
 
-    function renderChip(chip, delayMs) {
-        const href = chip.isUrl ? safeUrl(chip.value) : '';
-        const arrow = chip.isUrl ? '<i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-zinc-400"></i>' : '';
-        const inner = `
-            <img src="${getFavicon(chip.domain)}" class="w-5 h-5 rounded" onerror="this.style.visibility='hidden'">
-            <span class="text-[14px] text-stone-700 font-medium">${escapeHtml(chip.key)}</span>
-            ${arrow}`;
-        const cls = "chip-in bg-white border border-[#e4d7bb] px-4 py-2.5 rounded-full flex items-center gap-2.5 hover:border-bronze-400/60 hover:-translate-y-0.5 transition-all";
-        const style = ` style="animation-delay:${delayMs || 0}ms"`;
-        if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${cls}"${style}>${inner}</a>`;
-        return `<div class="${cls}"${style}>${inner}</div>`;
+    function updateAggregateCards(agg) {
+        const data = {
+            'agg-avatars': [...agg.avatars.entries()],
+            'agg-names': agg.names,
+            'agg-locations': agg.locations,
+            'agg-emails': agg.emails,
+            'agg-usernames': agg.usernames,
+            'agg-phones': agg.phones,
+        };
+        AGGREGATE_DEFS.forEach(def => {
+            const el = document.getElementById(def.id);
+            const items = data[def.id];
+            if (!el || !items || !items.length) { if (el) { el.style.display = 'none'; el.innerHTML = ''; } return; }
+            el.style.display = '';
+            const body = def.id === 'agg-avatars'
+                ? `<div class="flex flex-wrap gap-3">${items.map(([src, label]) => renderAvatarHero(src, label)).join('')}</div>`
+                : renderAggregateTags(items, 'bg-white/5 border border-white/10 text-zinc-300');
+            el.innerHTML = `${cardHeader(def.icon, 'bg-white/5 border-white/10 text-zinc-300', def.title, `${items.length} found`)}${body}`;
+        });
     }
 
     function emptyOrErrorCard(iconClass, iconWrapClass, title, titleClass, message) {
@@ -1064,8 +1242,8 @@
                 <div class="h-3 w-2/3 rounded-full skeleton"></div>
             </div>
             <div class="flex items-center gap-2.5 mt-8">
-                <div class="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse"></div>
-                <p class="mono text-[11px] text-teal-700 tracking-widest uppercase">Scanning modules…</p>
+                <div class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
+                <p class="mono text-[11px] text-teal-400 tracking-widest uppercase">Scanning modules…</p>
             </div>
         </div>`;
     }
@@ -1073,18 +1251,18 @@
     function createStatTiles() {
         document.getElementById('stats-summary').innerHTML = `
             <div class="card p-4 text-center">
-                <i class="fa-solid fa-check text-emerald-600 text-sm mb-2"></i>
-                <div id="stat-accounts" class="text-2xl font-bold text-stone-900 tracking-tight">0</div>
+                <i class="fa-solid fa-check text-emerald-400 text-sm mb-2"></i>
+                <div id="stat-accounts" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
                 <div class="mono text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Accounts</div>
             </div>
             <div class="card p-4 text-center">
-                <i class="fa-solid fa-layer-group text-teal-700 text-sm mb-2"></i>
-                <div id="stat-sections" class="text-2xl font-bold text-stone-900 tracking-tight">0</div>
+                <i class="fa-solid fa-layer-group text-teal-400 text-sm mb-2"></i>
+                <div id="stat-sections" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
                 <div class="mono text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Sections</div>
             </div>
             <div class="card p-4 text-center">
-                <i id="stat-breaches-icon" class="fa-solid fa-skull-crossbones text-zinc-400 text-sm mb-2"></i>
-                <div id="stat-breaches" class="text-2xl font-bold text-stone-900 tracking-tight">0</div>
+                <i id="stat-breaches-icon" class="fa-solid fa-skull-crossbones text-zinc-500 text-sm mb-2"></i>
+                <div id="stat-breaches" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
                 <div class="mono text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Breaches</div>
             </div>`;
     }
@@ -1346,111 +1524,57 @@
         lastScanTarget = target;
         lastScanLogs = logs;
 
-        // --- 1. GOOGLE PROFILE (STDOUT parsing) ---
-        const googleGaia = logs.match(/Gaia ID\s+(.*)/)?.[1]?.trim();
-        if (!renderedKeys.google && googleGaia) {
-            const googleName = logs.match(/Profile Name\s+(.*)/)?.[1]?.trim() || "Google user";
-            const googlePhoto = logs.match(/Photo URL\s+(.*)/)?.[1]?.trim();
-            const googleUpdate = logs.match(/Last Update\s+(.*)/)?.[1]?.trim() || "N/A";
-            const googleServices = logs.match(/Services\s+(.*)/)?.[1]?.trim();
-            const googleUserTypes = logs.match(/User Types\s+(.*)/)?.[1]?.trim();
-            const mapsUrl = `https://maps.google.com/maps/contrib/${encodeURIComponent(googleGaia)}`;
-            const photoSrc = safeUrl(googlePhoto) || 'https://www.gstatic.com/images/branding/product/2x/avatar_anonymous_72x72.png';
-            document.getElementById('slot-google').innerHTML = `
-                <div class="reveal-in glow-in card p-7 sm:p-8 scroll-mt-24" style="--accent:79,70,229">
-                    ${cardHeader('fa-brands fa-google', 'bg-indigo-500/10 border-indigo-500/25 text-indigo-600', 'Google Identity')}
-                    <div class="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                        <img src="${photoSrc}" class="w-24 h-24 rounded-2xl object-cover border border-[#e4d7bb] bg-stone-100 shrink-0" onerror="this.src='https://www.gstatic.com/images/branding/product/2x/avatar_anonymous_72x72.png'">
-                        <div class="flex-1 min-w-0 text-center md:text-left">
-                            <p class="text-xl font-bold text-stone-900 break-words tracking-tight">${escapeHtml(googleName)}</p>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-4 mono text-[13px]">
-                                <div class="text-zinc-500">GAIA ID <span class="text-stone-800 block sm:inline">${escapeHtml(googleGaia)}</span></div>
-                                <div class="text-zinc-500">LAST UPDATE <span class="text-stone-800 block sm:inline">${escapeHtml(googleUpdate)}</span></div>
-                                ${googleUserTypes ? `<div class="text-zinc-500 col-span-full break-words">TYPE(S) <span class="text-stone-700">${escapeHtml(googleUserTypes)}</span></div>` : ''}
-                                ${googleServices ? `<div class="col-span-full text-zinc-500 break-words">SERVICES <span class="text-stone-700">${escapeHtml(googleServices)}</span></div>` : ''}
-                            </div>
-                            <div class="flex flex-wrap justify-center md:justify-start gap-5 mt-5 text-[13px] font-semibold">
-                                <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 hover:text-emerald-600 flex items-center gap-1.5"><i class="fa-solid fa-map-location-dot"></i> Maps contributions</a>
-                                ${safeUrl(googlePhoto) ? `<a href="${safeUrl(googlePhoto)}" target="_blank" rel="noopener noreferrer" class="text-teal-700 hover:text-teal-600 flex items-center gap-1.5"><i class="fa-solid fa-image"></i> View photo</a>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            renderedKeys.google = true;
-        }
-
-        // --- 1.5 AGGREGATE SUMMARY (profile pictures / names / locations across every module) ---
-        const agg = collectAggregates(logs);
-        const aggSignature = `${agg.avatars.size}|${agg.names.length}|${agg.locations.length}`;
-        if (aggSignature !== renderedKeys.aggSignature) {
-            document.getElementById('slot-aggregates').innerHTML = renderAggregateCards(agg);
-            renderedKeys.aggSignature = aggSignature;
-        }
-
-        // --- 2. OTHER MODULES (GitHub, Proton, WordPress/Gravatar, Snapchat, Vivino, diagnostics...) ---
-        // GitHub used to get its own hand-built dark "Intelligence" card here;
-        // now it flows through the same generic renderer as every other
-        // module (matches the reference layout: one consistent card format
-        // per site, not a one-off), including its harvested-emails sub-items.
-        const skipTitles = ['HUDSON ROCK', 'SOCIAL MEDIA', 'PROFILE PICTURES'];
-        if (renderedKeys.google) skipTitles.push('GOOGLE IDENTITY');
-
-        const blocks = parseModuleBlocks(logs).filter(b => {
-            const upper = b.title.toUpperCase();
-            if (skipTitles.some(s => upper.includes(s))) return false;
-            // GHunt found nothing for this target - the dedicated Google Identity
-            // card only renders on a hit (step 1), so a bare "Not found" here
-            // would otherwise surface as its own near-empty rectangle. Drop it
-            // instead; other GHunt diagnostics (auth needed, tool errors, etc.)
-            // still show, since those are actionable for the user.
-            if (upper.includes('GOOGLE IDENTITY') &&
-                b.entries.some(e => /google account/i.test(e.key) && /not found/i.test(e.value))) return false;
-            return b.entries.some(e => e.icon !== '✓' || e.subs.length > 0);
-        });
-
         const modulesSlot = document.getElementById('slot-modules');
+        ensureAggregatePlaceholders(modulesSlot);
+        updateAggregateCards(collectAggregates(logs));
+
+        // --- Per-site cards ---
+        // Rich modules (their own module_header, several fields each - e.g.
+        // GitHub, Proton, Google Identity, Vivino...) are inserted first, so
+        // that if a bucket entry happens to name the same site (e.g.
+        // blackbird's own simpler "GitHub" existence check), the dedup guard
+        // below always keeps the richer card and skips the plainer
+        // duplicate - never the other way around.
+        const blocks = parseModuleBlocks(logs);
+        const richBlocks = [];
+        const bucketBlocks = [];
         blocks.forEach(block => {
-            if (renderedKeys.modules.has(block.title)) return;
-            renderedKeys.modules.add(block.title);
-            const delay = modulesSlot.children.length * 70;
-            modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block, delay));
+            const upper = block.title.toUpperCase();
+            if (HIDE_TITLES.some(s => upper.includes(s))) return;
+            if (SPLIT_TITLES.has(upper)) { bucketBlocks.push(block); return; }
+            // GHunt found nothing for this target - a bare "Not found" would
+            // otherwise surface as its own near-empty card; other GHunt
+            // diagnostics (auth needed, tool errors, etc.) still show, since
+            // those are actionable for the user.
+            if (upper.includes('GOOGLE IDENTITY') &&
+                block.entries.some(e => /google account/i.test(e.key) && /not found/i.test(e.value))) return;
+            if (!block.entries.length) return;
+            richBlocks.push(block);
         });
-        document.getElementById('slot-modules-label').classList.toggle('hidden', modulesSlot.children.length === 0);
 
-        // --- 3. SOCIAL MEDIA / CONNECTED SERVICES ---
-        const chips = parseServiceChips(logs);
-        if (chips.length > 0) {
-            const chipsSlot = document.getElementById('slot-chips');
-            if (!renderedKeys.chipsCard) {
-                chipsSlot.innerHTML = `
-                    <div class="reveal-in card p-6 scroll-mt-24">
-                        ${cardHeader('fa-solid fa-share-nodes', 'bg-sky-500/10 border-sky-500/25 text-sky-600', 'Registered on', '<span id="chips-count"></span>')}
-                        <div id="chips-list" class="flex flex-wrap gap-2.5"></div>
-                    </div>`;
-                renderedKeys.chipsCard = true;
-            }
-            const chipsList = document.getElementById('chips-list');
-            chips.forEach(chip => {
-                if (renderedKeys.chips.has(chip.key)) return;
-                renderedKeys.chips.add(chip.key);
-                const delay = chipsList.children.length * 40;
-                chipsList.insertAdjacentHTML('beforeend', renderChip(chip, delay));
-            });
-            const countEl = document.getElementById('chips-count');
-            if (countEl) countEl.textContent = `${chips.length} found`;
-        }
+        const insertCard = (block) => {
+            const key = normalizeSiteKey(block.title);
+            if (renderedKeys.modules.has(key)) return;
+            renderedKeys.modules.add(key);
+            const delay = modulesSlot.children.length * 60;
+            modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block, delay));
+        };
+        richBlocks.forEach(insertCard);
+        bucketBlocks.forEach(bucket => splitBucketBlock(bucket, target).forEach(insertCard));
 
-        // --- 4. STEALER LOGS / DATA BREACHES (kept last, most severe finding at the bottom) ---
+        // --- Stealer logs / data breaches - a distinct full-width danger
+        // section outside the masonry flow, since its layout (per-machine
+        // logins/passwords) doesn't fit the generic card format. ---
         let breachCount = logs.includes("HUDSON ROCK") ? logs.split(/Machine #\d+/).length - 1 : 0;
         if (!renderedKeys.hudson && logs.includes("HUDSON ROCK")) {
             const machines = logs.split(/Machine #\d+/).slice(1);
             let html = `<div class="reveal-in scroll-mt-24">
                 <div class="flex items-center gap-3.5 mb-4 px-1">
-                    <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 bg-red-500/10 border-red-500/25 text-red-600">
+                    <div class="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 bg-red-500/10 border-red-500/25 text-red-400">
                         <i class="fa-solid fa-skull-crossbones text-base"></i>
                     </div>
                     <div>
-                        <h3 class="text-[15px] font-semibold text-red-700 tracking-tight">Stealer logs</h3>
+                        <h3 class="text-[15px] font-semibold text-red-400 tracking-tight">Stealer logs</h3>
                         <p class="mono text-xs text-zinc-500 mt-0.5">${machines.length} infected machine${machines.length > 1 ? 's' : ''}</p>
                     </div>
                 </div>
@@ -1465,17 +1589,17 @@
 
                 html += `
                     <div class="card-flat border-l-2 border-l-red-500 rounded-2xl p-6 relative">
-                        <div class="absolute top-0 right-0 bg-red-500/10 px-3 py-1.5 rounded-bl-xl rounded-tr-2xl text-red-700 mono text-[10px] font-bold tracking-wide">INFECTION #0${i+1}</div>
+                        <div class="absolute top-0 right-0 bg-red-500/10 px-3 py-1.5 rounded-bl-xl rounded-tr-2xl text-red-400 mono text-[10px] font-bold tracking-wide">INFECTION #0${i+1}</div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-1">
                             <div class="text-[13px] space-y-2.5">
-                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">System</span> <span class="text-stone-800">${escapeHtml(sys)}</span></p>
-                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">IP address</span> <span class="text-red-700 mono">${escapeHtml(ip)}</span></p>
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">System</span> <span class="text-zinc-200">${escapeHtml(sys)}</span></p>
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">IP address</span> <span class="text-red-400 mono">${escapeHtml(ip)}</span></p>
                             </div>
                             <div class="text-[13px] space-y-2.5">
-                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">Date</span> <span class="text-stone-800">${escapeHtml(date)}</span></p>
-                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">Impact</span> <span class="text-orange-700">${escapeHtml(impact)}</span></p>
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">Date</span> <span class="text-zinc-200">${escapeHtml(date)}</span></p>
+                                <p><span class="mono text-zinc-500 uppercase font-bold block text-[10px] mb-1">Impact</span> <span class="text-orange-400">${escapeHtml(impact)}</span></p>
                             </div>
-                            <div class="bg-[#241b12] p-3.5 rounded-xl border border-white/5 mono text-[11px]">
+                            <div class="bg-black/40 p-3.5 rounded-xl border border-white/5 mono text-[11px]">
                                 <p class="text-emerald-400 mb-1 font-bold">LOGINS</p><p class="text-zinc-400 break-all mb-3">${escapeHtml(logins)}</p>
                                 <p class="text-pink-400 mb-1 font-bold">PASSWORDS</p><p class="text-zinc-400 break-all">${escapeHtml(pwds)}</p>
                             </div>
@@ -1492,8 +1616,8 @@
             loadingSlot.innerHTML = '';
         } else if (isFinal) {
             loadingSlot.innerHTML = emptyOrErrorCard(
-                'fa-solid fa-ghost text-zinc-400', 'bg-black/5',
-                'No footprint detected', 'text-stone-700',
+                'fa-solid fa-ghost text-zinc-500', 'bg-white/5',
+                'No footprint detected', 'text-zinc-200',
                 "This target doesn't match any known account across the scanned modules."
             );
         } else if (!loadingSlot.innerHTML) {
@@ -1501,13 +1625,12 @@
         }
 
         // --- Stats: update the existing tiles in place, pulse only the ones that changed ---
-        const sectionCount = (renderedKeys.google ? 1 : 0) +
-            renderedKeys.modules.size + (chips.length > 0 ? 1 : 0) + (renderedKeys.hudson ? 1 : 0);
-        setStatValue('stat-accounts', chips.length);
+        const sectionCount = renderedKeys.modules.size + (renderedKeys.hudson ? 1 : 0);
+        setStatValue('stat-accounts', renderedKeys.modules.size);
         setStatValue('stat-sections', sectionCount);
         setStatValue('stat-breaches', breachCount);
         const breachIcon = document.getElementById('stat-breaches-icon');
-        if (breachIcon) breachIcon.className = `fa-solid fa-skull-crossbones text-sm mb-2 ${breachCount > 0 ? 'text-red-600' : 'text-zinc-400'}`;
+        if (breachIcon) breachIcon.className = `fa-solid fa-skull-crossbones text-sm mb-2 ${breachCount > 0 ? 'text-red-400' : 'text-zinc-500'}`;
 
         if (hasAnyResults()) exportBar.classList.remove('hidden');
     }
@@ -1542,13 +1665,13 @@
         const isEmail = target.includes('@');
         targetSummary.innerHTML = `
             <div class="flex items-center gap-2 mb-1.5">
-                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-teal-700 text-xs"></i>
+                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-teal-400 text-xs"></i>
                 <span class="mono text-[10px] uppercase tracking-wider text-zinc-500">Target</span>
             </div>
-            <p class="text-[15px] text-stone-900 break-all font-medium">${escapeHtml(target)}</p>`;
+            <p class="text-[15px] text-zinc-100 break-all font-medium">${escapeHtml(target)}</p>`;
         loadingSlot.innerHTML = loadingSkeleton();
         logsElement.textContent = "› Scanning...";
-        setStatus('SCANNING...', 'bg-teal-600', true, 'text-teal-700');
+        setStatus('SCANNING...', 'bg-teal-500', true, 'text-teal-400');
 
         let gotAnyUpdate = false;
         const es = new EventSource(`/scan-stream?target=${encodeURIComponent(target)}`);
@@ -1567,7 +1690,7 @@
                 renderResults(target, data.raw_logs || '', true);
             } catch (e) { /* keep whatever was last rendered */ }
             es.close();
-            setStatus('DONE', 'bg-emerald-600', false, 'text-emerald-700');
+            setStatus('DONE', 'bg-emerald-500', false, 'text-emerald-400');
             setLoading(false);
         });
 
@@ -1575,12 +1698,12 @@
             let message = 'Scan failed.';
             try { message = JSON.parse(event.data).error || message; } catch (e) { /* keep default message */ }
             es.close();
-            setStatus('ERROR', 'bg-red-500', false, 'text-red-700');
+            setStatus('ERROR', 'bg-red-500', false, 'text-red-400');
             lastScanTarget = '';
             lastScanLogs = '';
             loadingSlot.innerHTML = emptyOrErrorCard(
-                'fa-solid fa-triangle-exclamation text-red-600', 'bg-red-500/10',
-                "Scan failed", 'text-red-600',
+                'fa-solid fa-triangle-exclamation text-red-400', 'bg-red-500/10',
+                "Scan failed", 'text-red-400',
                 `<span class="mono">${escapeHtml(message)}</span>`
             );
             setLoading(false);
@@ -1592,13 +1715,13 @@
             if (gotAnyUpdate) {
                 // Connection dropped after we already had (possibly partial) results -
                 // keep them on screen rather than replacing with an error card.
-                setStatus('DONE', 'bg-emerald-600', false, 'text-emerald-700');
+                setStatus('DONE', 'bg-emerald-500', false, 'text-emerald-400');
                 return;
             }
-            setStatus('ERROR', 'bg-red-500', false, 'text-red-700');
+            setStatus('ERROR', 'bg-red-500', false, 'text-red-400');
             loadingSlot.innerHTML = emptyOrErrorCard(
-                'fa-solid fa-triangle-exclamation text-red-600', 'bg-red-500/10',
-                "Scan failed", 'text-red-600',
+                'fa-solid fa-triangle-exclamation text-red-400', 'bg-red-500/10',
+                "Scan failed", 'text-red-400',
                 `<span class="mono">Connection to the server was lost.</span>`
             );
         };
