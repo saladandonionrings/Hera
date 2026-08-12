@@ -1,30 +1,7 @@
 import requests
-from bs4 import BeautifulSoup
 from core.display import console
+from core.scrape import extract_profile_meta, print_profile_meta
 import uuid
-
-
-# Obviously generic/placeholder images aren't worth surfacing as "the
-# user's profile picture" - skip them rather than showing a site's default
-# silhouette avatar for every unclaimed-looking profile.
-AVATAR_SKIP_MARKERS = ("default", "placeholder", "favicon", "sprite", "avatar_anonymous")
-
-
-def _extract_avatar(html):
-    """Best-effort profile picture pull from a fetched page's og:image /
-    twitter:image meta tags - the same fields most sites already set for
-    link-preview cards, so no site-specific scraping needed."""
-    try:
-        soup = BeautifulSoup(html, "html.parser")
-    except Exception:
-        return None
-    tag = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "twitter:image"})
-    if not tag:
-        return None
-    url = tag.get("content")
-    if not url or any(marker in url.lower() for marker in AVATAR_SKIP_MARKERS):
-        return None
-    return url
 
 
 class BlackbirdScanner:
@@ -221,19 +198,25 @@ class BlackbirdScanner:
 
                     if check_type == "github_api_check":
                         try:
-                            avatar_url = res.json().get("avatar_url")
+                            data = res.json()
+                            meta = {
+                                "avatar": data.get("avatar_url"),
+                                "name": data.get("name"),
+                                "bio": data.get("bio"),
+                            }
                         except Exception:
-                            avatar_url = None
+                            meta = {}
                     elif check_type == "nitter_check":
                         # The page that actually matched is test_res (one of
                         # several mirror instances tried above), not the
                         # outer res, which is still nitter.net's own response.
-                        avatar_url = _extract_avatar(test_res.text)
+                        meta = extract_profile_meta(test_res.text)
                     else:
-                        avatar_url = _extract_avatar(res.text)
+                        meta = extract_profile_meta(res.text)
 
-                    if avatar_url:
-                        avatars.append((site, avatar_url))
+                    print_profile_meta(meta)
+                    if meta.get("avatar"):
+                        avatars.append((site, meta["avatar"]))
 
             except Exception:
                 continue

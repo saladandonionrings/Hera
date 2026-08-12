@@ -12,6 +12,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 # display and conf
 from core.display import console as old_console
 from core.config import is_valid_email, is_valid_phone, PROTON_DOMAINS
+from core.scrape import print_profile_meta
 
 # OSINT modules
 from modules import (
@@ -252,6 +253,7 @@ class EpeiosPro:
                     if res:
                         value = getattr(scanner, "profile_url", "") or default_links.get(name, "Registered")
                         old_console.success(name, value)
+                        print_profile_meta(getattr(scanner, "meta", None) or {})
 
                 hr.scan_username(self.target)
                 VivinoScanner().scan(self.target)
