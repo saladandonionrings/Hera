@@ -1,7 +1,12 @@
+import os
 import requests
 from core.display import console
 from core.scrape import extract_profile_meta, print_profile_meta
+from dotenv import load_dotenv
 import uuid
+
+load_dotenv()
+KEYAPI_KEY = os.getenv("KEYAPI_KEY")
 
 
 class BlackbirdScanner:
@@ -11,6 +16,49 @@ class BlackbirdScanner:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9",
         }
+
+    def check_pinterest_keyapi(self):
+        """Pinterest existence via keyapi.ai's search endpoint, which returns
+        the actual profile record (or an empty list) instead of relying on a
+        redirect heuristic - the old pinterest_custom_check below (still used
+        as a fallback when no KEYAPI_KEY is configured) produced too many
+        false positives, since some unclaimed usernames don't redirect to
+        the show_error page either."""
+        try:
+            res = requests.get(
+                "https://api.keyapi.ai/v1/pinterest/search",
+                params={"username": self.username},
+                headers={"Authorization": f"Bearer {KEYAPI_KEY}"},
+                timeout=10,
+            )
+            if res.status_code != 200:
+                return False, {}
+            users = ((res.json().get("data") or {}).get("users")) or []
+            if not users:
+                return False, {}
+            user = users[0]
+        except Exception:
+            return False, {}
+
+        meta = {}
+        avatar = (user.get("image_xlarge_url") or user.get("image_large_url")
+                  or user.get("image_medium_url") or user.get("image_small_url"))
+        if avatar:
+            meta["avatar"] = avatar
+        if user.get("full_name"):
+            meta["name"] = user["full_name"]
+
+        stats = []
+        if user.get("follower_count") is not None:
+            stats.append(f"{user['follower_count']} followers")
+        if user.get("pin_count") is not None:
+            stats.append(f"{user['pin_count']} pins")
+        if user.get("board_count") is not None:
+            stats.append(f"{user['board_count']} boards")
+        if stats:
+            meta["stats"] = " / ".join(stats)
+
+        return True, meta
 
     def check_nexon(self):
         """Vérification via l'API interne de Nexon (Email ou Username)"""
@@ -81,7 +129,7 @@ class BlackbirdScanner:
             ("Vimeo", f"https://vimeo.com/{self.username}", "status", 200),
 
             # --- art/pics ---
-            ("Pinterest", f"https://www.pinterest.com/{self.username}/", "pinterest_custom_check", None),
+            ("Pinterest", f"https://www.pinterest.com/{self.username}/", "pinterest_check", None),
             ("Behance", f"https://www.behance.net/{self.username}", "status", 200),
             ("VSCO", f"https://vsco.co/{self.username}/gallery", "status", 200),
             ("Flickr", f"https://www.flickr.com/people/{self.username}/", "status", 200),
@@ -122,6 +170,24 @@ class BlackbirdScanner:
 
         for site, url, check_type, check_val in targets:
             try:
+                if check_type == "pinterest_check":
+                    is_found, meta = self.check_pinterest_keyapi() if KEYAPI_KEY else (False, {})
+                    if not is_found and not KEYAPI_KEY:
+                        # No API key configured - fall back to the old
+                        # redirect heuristic (missing accounts redirect, via
+                        # allow_redirects, to pinterest.com/?show_error=true).
+                        res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
+                        if res.status_code == 200 and "show_error=true" not in res.url:
+                            is_found = True
+                            meta = extract_profile_meta(res.text)
+                    if is_found:
+                        console.success(site, url)
+                        found_any = True
+                        print_profile_meta(meta)
+                        if meta.get("avatar"):
+                            avatars.append((site, meta["avatar"]))
+                    continue
+
                 res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
                 is_found = False
 
@@ -152,12 +218,6 @@ class BlackbirdScanner:
                     if res.status_code == 200 and f"{self.username}" in res.text: is_found = True
                 elif check_type == "youtube_custom_check":
                     if res.status_code == 200 and "404 Not Found" not in res.text and "This page isn't available" not in res.text:
-                        is_found = True
-                elif check_type == "pinterest_custom_check":
-                    # A missing account redirects (via allow_redirects) to
-                    # pinterest.com/?show_error=true - that's the reliable
-                    # signal, not page text (which varies by locale).
-                    if res.status_code == 200 and "show_error=true" not in res.url:
                         is_found = True
                 elif check_type == "nitter_check":
                     instances = [f"https://nitter.net/{self.username}", f"https://nitter.cz/{self.username}", f"https://nitter.it/{self.username}"]
