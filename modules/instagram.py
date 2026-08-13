@@ -28,10 +28,17 @@ class InstagramScanner:
     def _fetch_via_keyapi(self):
         """Returns (user_dict_or_None, error_reason_or_None) - unlike a bare
         None return, the reason lets scan() tell the user *why* nothing was
-        found instead of failing completely silently."""
+        found instead of failing completely silently.
+
+        keyapi.ai's fetch_user_info wraps the profile under a doubly-nested
+        "data.data" (a not-found account instead sets "data.status" to
+        false with an "errorMessage"), and uses flat field names
+        (follower_count, is_business...) instead of Instagram's own nested
+        edge_followed_by/is_business_account shape - translated below so
+        the shared rendering code in scan() doesn't need two code paths."""
         try:
             res = requests.get(
-                "https://api.keyapi.ai/v1/instagram/web_profile_info",
+                "https://api.keyapi.ai/v1/instagram/fetch_user_info",
                 params={"username": self.username},
                 headers={"Authorization": f"Bearer {KEYAPI_KEY}"},
                 timeout=10,
@@ -41,14 +48,21 @@ class InstagramScanner:
         if res.status_code != 200:
             return None, f"keyapi.ai returned HTTP {res.status_code}"
         try:
-            data = res.json().get("data") or {}
+            outer = res.json().get("data") or {}
         except ValueError:
             return None, "keyapi.ai returned a non-JSON response"
-        # keyapi.ai's response shape wasn't confirmed to nest under "user"
-        # the same way Instagram's own endpoint does - accept either.
-        user = data.get("user") or data or None
-        if not user:
+        if outer.get("status") is False:
+            return None, outer.get("errorMessage") or "keyapi.ai reports the account does not exist"
+        raw = outer.get("data")
+        if not raw:
             return None, "keyapi.ai returned no profile data (account likely doesn't exist)"
+
+        user = dict(raw)
+        user["edge_followed_by"] = {"count": raw.get("follower_count")}
+        user["edge_follow"] = {"count": raw.get("following_count")}
+        user["edge_owner_to_timeline_media"] = {"count": raw.get("media_count")}
+        user["is_business_account"] = raw.get("is_business")
+        user["category_name"] = raw.get("account_category") or raw.get("category")
         return user, None
 
     def _fetch_direct(self):
