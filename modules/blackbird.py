@@ -203,10 +203,16 @@ class BlackbirdScanner:
             ("BuyMeACoffee", f"https://www.buymeacoffee.com/{self.username}", "text_not_present", "couldn't find that page"),
             ("Patreon", f"https://www.patreon.com/{self.username}", "status", 200),
             ("Gravatar", f"http://en.gravatar.com/{self.username}.json", "text_present", '"profileUrl"'),
-            ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "response_url", "user-not-found"),
+            # Was "response_url", a check_type that was never actually
+            # implemented in the dispatch below - Polarsteps never reported
+            # a hit no matter what. "url_not_contains" does exactly what
+            # was intended here (missing accounts redirect to a URL
+            # containing "user-not-found") and already exists below.
+            ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "url_not_contains", "user-not-found"),
 
             # --- gaming, video ---
             ("PSNProfiles", f"https://psnprofiles.com/{self.username}", "text_not_present", "This player could not be found"),
+            ("Fortnite Tracker", f"https://fortnitetracker.com/profile/all/{self.username}", "status", 200),
             # Xbox is not checked here either - the xbox.com/play/user/
             # page returns 200 regardless of whether the gamertag exists
             # (false positives). XboxGamertagScanner (run separately in
