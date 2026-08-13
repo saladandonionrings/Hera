@@ -173,7 +173,15 @@ class BlackbirdScanner:
             # --- music, video, cinema ---
             ("Genius (User)", f"https://genius.com/{self.username}", "status", 200),
             ("Genius (Artist)", f"https://genius.com/artists/{self.username}", "status", 200),
-            ("Spotify", f"https://open.spotify.com/user/{self.username}", "text_present", "spotify:user:"),
+            # A missing/private Spotify user still returns 200 with
+            # "spotify:user:" present in the page's client-side routing
+            # template regardless of the username (false positives) - the
+            # page's title falling back to Spotify's generic web-player
+            # branding instead of a real display name is the reliable
+            # "doesn't exist" signal. Also means real profile info
+            # (avatar/name) gets pulled in automatically on a hit, same as
+            # every other text_not_present-checked site.
+            ("Spotify", f"https://open.spotify.com/user/{self.username}", "text_not_present", "Spotify - Web Player: Music for everyone"),
             # SoundCloud is not checked here either - SoundCloudScanner (deep
             # analysis module) is the sole source for it.
             ("Letterboxd", f"https://letterboxd.com/{self.username}/", "status", 200),
