@@ -18,12 +18,14 @@ class BlackbirdScanner:
         }
 
     def check_pinterest_keyapi(self):
-        """Pinterest existence via keyapi.ai's search endpoint, which returns
-        the actual profile record (or an empty list) instead of relying on a
-        redirect heuristic - the old pinterest_custom_check below (still used
-        as a fallback when no KEYAPI_KEY is configured) produced too many
-        false positives, since some unclaimed usernames don't redirect to
-        the show_error page either."""
+        """Pinterest existence via keyapi.ai's search endpoint - which is a
+        fuzzy search, not an exact-username lookup, so it happily returns
+        similar-looking accounts (e.g. a lookalike username with a capital
+        "I" swapped for a lowercase "l") for a query that doesn't actually
+        exist. Only a case-insensitive exact match on the returned
+        username counts as a hit; the old pinterest_custom_check below
+        (still used as a fallback when no KEYAPI_KEY is configured) is kept
+        for when no key is set."""
         try:
             res = requests.get(
                 "https://api.keyapi.ai/v1/pinterest/search",
@@ -34,9 +36,10 @@ class BlackbirdScanner:
             if res.status_code != 200:
                 return False, {}
             users = ((res.json().get("data") or {}).get("users")) or []
-            if not users:
+            target = self.username.strip().lower()
+            user = next((u for u in users if (u.get("username") or "").strip().lower() == target), None)
+            if not user:
                 return False, {}
-            user = users[0]
         except Exception:
             return False, {}
 
@@ -150,7 +153,11 @@ class BlackbirdScanner:
             # --- cyber/dev ---
             ("GitHub", f"https://api.github.com/users/{self.username}", "github_api_check", None),
             ("Keybase", f"https://keybase.io/{self.username}", "status", 200),
-            ("Replit", f"https://replit.com/@{self.username}", "status", 200),
+            # A missing Replit account still returns 200 but with the site's
+            # generic default og:image instead of a real avatar - that image
+            # URL showing up in the page is the reliable "doesn't exist"
+            # signal, not the status code.
+            ("Replit", f"https://replit.com/@{self.username}", "text_not_present", "https://replit.com/public/images/opengraph_rebrand.jpg"),
             ("Bugcrowd", f"https://bugcrowd.com/{self.username}", "bugcrowd_check", None),
 
             # --- gaming, esport ---
@@ -204,7 +211,9 @@ class BlackbirdScanner:
             ("VLR.gg", f"https://www.vlr.gg/user/{self.username}", "text_not_present", "Page Not Found"),
             ("JeuxVideo.com", f"https://www.jeuxvideo.com/profil/{self.username}", "text_not_present", "Profil introuvable"),
             ("Dailymotion", f"https://www.dailymotion.com/{self.username}", "status", 200),
-            ("BandLab", f"https://www.bandlab.com/{self.username}", "status", 200),
+            # Same as Replit above - a missing BandLab account still
+            # returns 200 with the site's generic default og:image.
+            ("BandLab", f"https://www.bandlab.com/{self.username}", "text_not_present", "https://www.bandlab.com/web-app/images/open-graph-4fd21aa09f.png"),
         ]
 
         found_any = False
