@@ -83,6 +83,13 @@ class InstagramScanner:
         return user, None
 
     def scan(self):
+        # Printed unconditionally (not just on success) - without a header
+        # here, a failure's console.warning below has no enclosing block,
+        # which the frontend parser needs to render it as its own section
+        # instead of silently dropping it or bleeding into whatever module
+        # happened to run right before it.
+        console.module_header("INSTAGRAM")
+
         reasons = []
         user = None
         if KEYAPI_KEY:
@@ -105,7 +112,6 @@ class InstagramScanner:
             console.warning("Instagram", " / ".join(reasons) or "no profile data found")
             return False
 
-        console.module_header("INSTAGRAM")
         console.success("Instagram Profile", f"https://www.instagram.com/{self.username}/")
 
         full_name = user.get("full_name")
