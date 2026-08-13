@@ -58,8 +58,10 @@ def print_profile_meta(meta):
     own result card (avatar/name/bio) instead of a bare link.
 
     `meta` may carry any of: avatar, name, bio - plus a handful of optional
-    extras (location, joined) that some modules can pull straight from a
-    JSON API response without a page fetch."""
+    extras (location, joined, stats) that some modules can pull straight
+    from a JSON API response without a page fetch. `stats` is printed under
+    the "Activity" key (e.g. "1,234 followers / 56 posts") - the frontend
+    renders that exact key as a row of stat chips on the resulting card."""
     if meta.get("avatar"):
         console.sub_item("Avatar", meta["avatar"])
     if meta.get("name"):
@@ -70,3 +72,5 @@ def print_profile_meta(meta):
         console.sub_item("Location", meta["location"])
     if meta.get("joined"):
         console.sub_item("Joined", meta["joined"])
+    if meta.get("stats"):
+        console.sub_item("Activity", meta["stats"])

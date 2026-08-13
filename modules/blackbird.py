@@ -1,7 +1,12 @@
+import os
 import requests
 from core.display import console
 from core.scrape import extract_profile_meta, print_profile_meta
+from dotenv import load_dotenv
 import uuid
+
+load_dotenv()
+KEYAPI_KEY = os.getenv("KEYAPI_KEY")
 
 
 class BlackbirdScanner:
@@ -11,6 +16,93 @@ class BlackbirdScanner:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9",
         }
+
+    def check_pinterest_keyapi(self):
+        """Pinterest existence via keyapi.ai's search endpoint, which returns
+        the actual profile record (or an empty list) instead of relying on a
+        redirect heuristic - the old pinterest_custom_check below (still used
+        as a fallback when no KEYAPI_KEY is configured) produced too many
+        false positives, since some unclaimed usernames don't redirect to
+        the show_error page either."""
+        try:
+            res = requests.get(
+                "https://api.keyapi.ai/v1/pinterest/search",
+                params={"username": self.username},
+                headers={"Authorization": f"Bearer {KEYAPI_KEY}"},
+                timeout=10,
+            )
+            if res.status_code != 200:
+                return False, {}
+            users = ((res.json().get("data") or {}).get("users")) or []
+            if not users:
+                return False, {}
+            user = users[0]
+        except Exception:
+            return False, {}
+
+        meta = {}
+        avatar = (user.get("image_xlarge_url") or user.get("image_large_url")
+                  or user.get("image_medium_url") or user.get("image_small_url"))
+        if avatar:
+            meta["avatar"] = avatar
+        if user.get("full_name"):
+            meta["name"] = user["full_name"]
+
+        stats = []
+        if user.get("follower_count") is not None:
+            stats.append(f"{user['follower_count']} followers")
+        if user.get("pin_count") is not None:
+            stats.append(f"{user['pin_count']} pins")
+        if user.get("board_count") is not None:
+            stats.append(f"{user['board_count']} boards")
+        if stats:
+            meta["stats"] = " / ".join(stats)
+
+        return True, meta
+
+    def check_twitter_keyapi(self):
+        """X/Twitter existence via keyapi.ai's screenname endpoint, which
+        returns the live profile record (avatar, name, bio, follower/
+        following/tweet counts) straight from X's internal API - the old
+        nitter_check below (still used as a fallback when no KEYAPI_KEY is
+        configured) instead scrapes third-party nitter mirrors, which
+        rate-limit or go down unpredictably."""
+        try:
+            res = requests.get(
+                "https://api.keyapi.ai/v1/twitter/screenname",
+                params={"screenname": self.username},
+                headers={"Authorization": f"Bearer {KEYAPI_KEY}"},
+                timeout=10,
+            )
+            if res.status_code != 200:
+                return False, {}
+            data = res.json().get("data") or {}
+            if not data.get("profile") and not data.get("id"):
+                return False, {}
+        except Exception:
+            return False, {}
+
+        meta = {}
+        if data.get("avatar"):
+            meta["avatar"] = data["avatar"]
+        if data.get("name"):
+            meta["name"] = data["name"]
+        if data.get("desc"):
+            meta["bio"] = data["desc"]
+        if data.get("location"):
+            meta["location"] = data["location"]
+
+        stats = []
+        if data.get("sub_count") is not None:
+            stats.append(f"{data['sub_count']} followers")
+        if data.get("friends") is not None:
+            stats.append(f"{data['friends']} following")
+        if data.get("statuses_count") is not None:
+            stats.append(f"{data['statuses_count']} tweets")
+        if stats:
+            meta["stats"] = " / ".join(stats)
+
+        return True, meta
 
     def check_nexon(self):
         """Vérification via l'API interne de Nexon (Email ou Username)"""
@@ -44,7 +136,7 @@ class BlackbirdScanner:
             # Instagram is not checked here - InstagramScanner (deep analysis
             # module, called separately) is the sole source for it, hitting
             # instagram.com's own API instead of a third-party proxy.
-            ("X (Twitter)", f"https://nitter.net/{self.username}", "nitter_check", None),
+            ("X (Twitter)", f"https://x.com/{self.username}", "x_check", None),
             ("Snapchat", f"https://www.snapchat.com/add/{self.username}", "text_present", "og:title"),
             # TikTok is not checked here either - TikTokScanner (deep
             # analysis module) is the sole source for it.
@@ -81,7 +173,7 @@ class BlackbirdScanner:
             ("Vimeo", f"https://vimeo.com/{self.username}", "status", 200),
 
             # --- art/pics ---
-            ("Pinterest", f"https://www.pinterest.com/{self.username}/", "pinterest_custom_check", None),
+            ("Pinterest", f"https://www.pinterest.com/{self.username}/", "pinterest_check", None),
             ("Behance", f"https://www.behance.net/{self.username}", "status", 200),
             ("VSCO", f"https://vsco.co/{self.username}/gallery", "status", 200),
             ("Flickr", f"https://www.flickr.com/people/{self.username}/", "status", 200),
@@ -122,6 +214,50 @@ class BlackbirdScanner:
 
         for site, url, check_type, check_val in targets:
             try:
+                if check_type == "pinterest_check":
+                    is_found, meta = self.check_pinterest_keyapi() if KEYAPI_KEY else (False, {})
+                    if not is_found and not KEYAPI_KEY:
+                        # No API key configured - fall back to the old
+                        # redirect heuristic (missing accounts redirect, via
+                        # allow_redirects, to pinterest.com/?show_error=true).
+                        res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
+                        if res.status_code == 200 and "show_error=true" not in res.url:
+                            is_found = True
+                            meta = extract_profile_meta(res.text)
+                    if is_found:
+                        console.success(site, url)
+                        found_any = True
+                        print_profile_meta(meta)
+                        if meta.get("avatar"):
+                            avatars.append((site, meta["avatar"]))
+                    continue
+
+                if check_type == "x_check":
+                    is_found, meta = self.check_twitter_keyapi() if KEYAPI_KEY else (False, {})
+                    if not is_found and not KEYAPI_KEY:
+                        # No API key configured - fall back to scraping
+                        # third-party nitter mirrors for the profile page.
+                        instances = [f"https://nitter.net/{self.username}", f"https://nitter.cz/{self.username}", f"https://nitter.it/{self.username}"]
+                        for instance_url in instances:
+                            try:
+                                test_res = requests.get(instance_url, headers=self.headers, timeout=5)
+                                content_low = test_res.text.lower()
+                                not_found_indicators = ["user not found", "not found", "unavailable", "doesn't exist", "this page doesn’t exist", "empty-feed-header"]
+                                if test_res.status_code == 200 and not any(x in content_low for x in not_found_indicators):
+                                    if self.username.lower() in content_low:
+                                        is_found = True
+                                        meta = extract_profile_meta(test_res.text)
+                                        break
+                            except Exception:
+                                continue
+                    if is_found:
+                        console.success(site, url)
+                        found_any = True
+                        print_profile_meta(meta)
+                        if meta.get("avatar"):
+                            avatars.append((site, meta["avatar"]))
+                    continue
+
                 res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
                 is_found = False
 
@@ -153,28 +289,6 @@ class BlackbirdScanner:
                 elif check_type == "youtube_custom_check":
                     if res.status_code == 200 and "404 Not Found" not in res.text and "This page isn't available" not in res.text:
                         is_found = True
-                elif check_type == "pinterest_custom_check":
-                    # A missing account redirects (via allow_redirects) to
-                    # pinterest.com/?show_error=true - that's the reliable
-                    # signal, not page text (which varies by locale).
-                    if res.status_code == 200 and "show_error=true" not in res.url:
-                        is_found = True
-                elif check_type == "nitter_check":
-                    instances = [f"https://nitter.net/{self.username}", f"https://nitter.cz/{self.username}", f"https://nitter.it/{self.username}"]
-                    found_on_any = False
-                    for instance_url in instances:
-                        try:
-                            test_res = requests.get(instance_url, headers=self.headers, timeout=5)
-                            content_low = test_res.text.lower()
-                            not_found_indicators = ["user not found", "not found", "unavailable", "doesn't exist", "this page doesn’t exist", "empty-feed-header"]
-                            if test_res.status_code == 200 and not any(x in content_low for x in not_found_indicators):
-                                if self.username.lower() in content_low:
-                                    is_found = True
-                                    url = instance_url
-                                    found_on_any = True
-                                    break
-                        except: continue
-                    is_found = found_on_any
                 elif check_type == "breach_check":
                     if res.status_code == 200:
                         content_low = res.text.lower()
@@ -191,7 +305,6 @@ class BlackbirdScanner:
                 if is_found:
                     final_url = url
                     if site == "GitHub": final_url = f"https://github.com/{self.username}/"
-                    if site == "X (Twitter)": final_url = f"https://x.com/{self.username}"
 
                     console.success(site, final_url)
                     found_any = True
@@ -206,11 +319,6 @@ class BlackbirdScanner:
                             }
                         except Exception:
                             meta = {}
-                    elif check_type == "nitter_check":
-                        # The page that actually matched is test_res (one of
-                        # several mirror instances tried above), not the
-                        # outer res, which is still nitter.net's own response.
-                        meta = extract_profile_meta(test_res.text)
                     else:
                         meta = extract_profile_meta(res.text)
 
