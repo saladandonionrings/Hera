@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from core.display import console
 from core.scrape import extract_profile_meta, print_profile_meta
@@ -353,6 +354,17 @@ class BlackbirdScanner:
                             meta = {}
                     else:
                         meta = extract_profile_meta(res.text)
+                        if site == "Polarsteps":
+                            # Polarsteps doesn't set a useful og:title (no
+                            # real display name) - the actual name only
+                            # shows up in a CSS-module-hashed class like
+                            # "UserWidget-module_name__aB3dE", so match on
+                            # the stable prefix and ignore the random suffix.
+                            name_match = re.search(
+                                r'class="UserWidget-module_name[^"]*"[^>]*>([^<]+)<', res.text
+                            )
+                            if name_match:
+                                meta["name"] = name_match.group(1).strip()
 
                     print_profile_meta(meta)
                     if meta.get("avatar"):
