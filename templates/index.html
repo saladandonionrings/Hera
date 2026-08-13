@@ -358,10 +358,17 @@
     // Tracks what's already been rendered for the CURRENT scan, so streamed
     // updates only ever insert what's new instead of wiping and rebuilding
     // everything (which is what caused the "page refresh" flicker).
-    let renderedKeys = { hudson: false, modules: new Set() };
+    // modules maps a site's normalized key -> how many fields its card was
+    // last rendered with, not just whether it exists - a card can appear
+    // with just a bare "found" line before its Avatar/Name/Bio sub-items
+    // (printed right after, but not guaranteed to land in the same
+    // streamed chunk) show up on a later update, and should be refreshed
+    // in place once they do instead of staying frozen at its first,
+    // incomplete render.
+    let renderedKeys = { hudson: false, modules: new Map() };
 
     function resetRenderState() {
-        renderedKeys = { hudson: false, modules: new Set() };
+        renderedKeys = { hudson: false, modules: new Map() };
         ['slot-loading', 'slot-modules', 'slot-hudson'].forEach(id => {
             document.getElementById(id).innerHTML = '';
         });
@@ -1028,7 +1035,10 @@
         // its own wider spot in the grid instead of collapsing most of that
         // behind "+N more fields" like every other same-size card.
         const sizeClass = block.title.toUpperCase() === 'GOOGLE IDENTITY' ? ' sm:col-span-2' : '';
-        return `<div class="reveal-in glow-in card p-5${sizeClass}" style="--accent:96,165,250;animation-delay:${delayMs || 0}ms">
+        // Stable id (matches insertCard's key) so a later, richer render of
+        // the same site can replace this card in place instead of being
+        // silently skipped by the dedup guard.
+        return `<div id="card-${normalizeSiteKey(block.title)}" class="reveal-in glow-in card p-5${sizeClass}" style="--accent:96,165,250;animation-delay:${delayMs || 0}ms">
             ${headHtml}
             ${nameHtml}
             ${descHtml}
@@ -1541,8 +1551,20 @@
 
         const insertCard = (block) => {
             const key = normalizeSiteKey(block.title);
-            if (renderedKeys.modules.has(key)) return;
-            renderedKeys.modules.add(key);
+            const richness = block.entries.length;
+            const renderedRichness = renderedKeys.modules.get(key);
+            if (renderedRichness !== undefined) {
+                // Already on screen - only replace it if this pass actually
+                // has more to show (e.g. Avatar/Name/Bio sub-items that
+                // hadn't streamed in yet when the card first appeared).
+                if (richness <= renderedRichness) return;
+                const existingEl = document.getElementById(`card-${key}`);
+                if (!existingEl) return;
+                renderedKeys.modules.set(key, richness);
+                existingEl.outerHTML = renderModuleBlockCard(block, 0);
+                return;
+            }
+            renderedKeys.modules.set(key, richness);
             const delay = modulesSlot.children.length * 60;
             modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block, delay));
         };
