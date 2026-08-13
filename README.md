@@ -40,7 +40,7 @@ pip3 install -r requirements.txt
 | Variable | Purpose | Required |
 | :--- | :--- | :--- |
 | `GITHUB_TOKEN` | Raises GitHub API rate limits | no |
-| `KEYAPI_KEY` | [keyapi.ai](https://keyapi.ai) bearer token - more reliable Pinterest/Instagram profile lookups (avatar, name, bio, stats) than the built-in scraping fallback | no |
+| `KEYAPI_KEY` | [keyapi.ai](https://keyapi.ai) bearer token - more reliable Pinterest/Instagram/X (Twitter) profile lookups (avatar, name, bio, stats) than the built-in scraping fallback | no |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_PROJECT_ID` / `GOOGLE_CLIENT_SECRET` | Your own OAuth client for the Google profile-photo feature, create one at [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) (type: Desktop app) | no* |
 | `FACEBOOK_LSD_TOKEN` / `ESPN_API_KEY` | Override the built-in defaults if the platforms rotate them | no |
 | `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` | Your own Telegram API app : create one at [my.telegram.org/apps](https://my.telegram.org/apps) | no** |
