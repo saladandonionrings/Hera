@@ -189,6 +189,7 @@ class BlackbirdScanner:
             # --- dating, adults ---
             ("Tinder", f"https://tinder.com/@{self.username}", "text_not_present", "The person you're looking for may have changed their ID but there are plenty more people to see on Tinder."),
             ("XVideos", f"https://www.xvideos.com/profiles/{self.username}", "status", 200),
+            ("Pornhub", f"https://www.pornhub.com/users/{self.username}", "status", 200),
 
             # --- forums, writings ---
             ("Medium", f"https://medium.com/@{self.username}", "text_not_present", "Out of nothing, something."),
