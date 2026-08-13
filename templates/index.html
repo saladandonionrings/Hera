@@ -1004,8 +1004,11 @@
             }).join('') + `</div>`;
         }
 
-        const visibleEntries = otherEntries.slice(0, VISIBLE_FIELD_COUNT);
-        const extraEntries = otherEntries.slice(VISIBLE_FIELD_COUNT);
+        // Google Identity gets a wider card (see sizeClass below) with room
+        // for more than the usual 4 fields before collapsing the rest.
+        const visibleCount = block.title.toUpperCase() === 'GOOGLE IDENTITY' ? VISIBLE_FIELD_COUNT * 2 : VISIBLE_FIELD_COUNT;
+        const visibleEntries = otherEntries.slice(0, visibleCount);
+        const extraEntries = otherEntries.slice(visibleCount);
         const rows = visibleEntries.map(renderFieldRow).join('');
 
         let extraHtml = '';
@@ -1020,7 +1023,12 @@
         }
 
         const bodyTopMargin = (nameHtml || descHtml || statsHtml) ? 'mt-3' : 'mt-2.5';
-        return `<div class="reveal-in glow-in card p-5" style="--accent:96,165,250;animation-delay:${delayMs || 0}ms">
+        // Google Identity (name + Gaia ID + Maps link + avatar + services)
+        // packs in more fields than a typical existence-check card - given
+        // its own wider spot in the grid instead of collapsing most of that
+        // behind "+N more fields" like every other same-size card.
+        const sizeClass = block.title.toUpperCase() === 'GOOGLE IDENTITY' ? ' sm:col-span-2' : '';
+        return `<div class="reveal-in glow-in card p-5${sizeClass}" style="--accent:96,165,250;animation-delay:${delayMs || 0}ms">
             ${headHtml}
             ${nameHtml}
             ${descHtml}

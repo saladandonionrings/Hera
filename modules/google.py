@@ -144,9 +144,22 @@ class GoogleScanner:
             
             if name: console.info("Profile Name", name.group(1).strip())
             if edit: console.info("Last Update", edit.group(1).strip())
-            if gaia: 
+            if gaia:
                 self.gaia_id = gaia.group(1).strip()
                 console.info("Gaia ID", self.gaia_id)
+                console.info("Maps Profile", f"https://www.google.com/maps/contrib/{self.gaia_id}")
+
+                # GHunt's own output usually surfaces the profile picture
+                # straight from Google's public profile info (no OAuth
+                # needed) - matched by CDN domain rather than a specific
+                # label, since that's stable across GHunt's own output
+                # format changes. fetch_photo() below (People API, requires
+                # GOOGLE_CLIENT_ID/SECRET) is a secondary attempt in case
+                # this one doesn't turn up a URL.
+                photo_match = re.search(r"(https://lh3\.googleusercontent\.com/[^\s\]\)\"']+)", output)
+                if photo_match:
+                    console.info("", photo_match.group(1))
+
                 self.fetch_photo()
 
             u_types = re.search(r"User types :\n((?:- .*\n?)*)", output)

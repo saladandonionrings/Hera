@@ -207,10 +207,17 @@ class BlackbirdScanner:
 
             # --- gaming, video ---
             ("PSNProfiles", f"https://psnprofiles.com/{self.username}", "text_not_present", "This player could not be found"),
-            ("Xbox", f"https://www.xbox.com/en-US/play/user/{self.username}", "status", 200),
+            # Xbox is not checked here either - the xbox.com/play/user/
+            # page returns 200 regardless of whether the gamertag exists
+            # (false positives). XboxGamertagScanner (run separately in
+            # main.py's username_scanners) hits xboxgamertag.com/search/
+            # instead, which actually distinguishes found from not-found.
             ("VLR.gg", f"https://www.vlr.gg/user/{self.username}", "text_not_present", "Page Not Found"),
             ("JeuxVideo.com", f"https://www.jeuxvideo.com/profil/{self.username}", "text_not_present", "Profil introuvable"),
-            ("Dailymotion", f"https://www.dailymotion.com/{self.username}", "status", 200),
+            # A missing Dailymotion account 404s on the /user/ path - the
+            # bare https://www.dailymotion.com/{username} page returns 200
+            # regardless of whether the account exists (false positives).
+            ("Dailymotion", f"https://www.dailymotion.com/user/{self.username}", "status", 200),
             # Same as Replit above - a missing BandLab account still
             # returns 200 with the site's generic default og:image.
             ("BandLab", f"https://www.bandlab.com/{self.username}", "text_not_present", "https://www.bandlab.com/web-app/images/open-graph-4fd21aa09f.png"),
