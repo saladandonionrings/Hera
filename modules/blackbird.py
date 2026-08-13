@@ -209,6 +209,7 @@ class BlackbirdScanner:
             # was intended here (missing accounts redirect to a URL
             # containing "user-not-found") and already exists below.
             ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "url_not_contains", "user-not-found"),
+            ("TripAdvisor", f"https://www.tripadvisor.com/Profile/{self.username}", "status", 200),
 
             # --- gaming, video ---
             ("PSNProfiles", f"https://psnprofiles.com/{self.username}", "text_not_present", "This player could not be found"),
