@@ -249,9 +249,7 @@
             <main aria-live="polite">
                 <div id="slot-loading"></div>
                 <div id="slot-modules-wrap">
-                    <div id="slot-modules">
-                        <div id="slot-aggregates" class="results-grid"></div>
-                    </div>
+                    <div id="slot-modules"></div>
                 </div>
                 <div id="slot-hudson" class="mt-8"></div>
             </main>
@@ -1199,8 +1197,18 @@
         { id: 'agg-phones', icon: 'fa-solid fa-phone', title: 'Phones' },
     ];
 
-    function ensureAggregatePlaceholders(aggregatesSlot) {
+    function ensureAggregatePlaceholders(modulesSlot) {
         if (document.getElementById(AGGREGATE_DEFS[0].id)) return;
+        // The wrapper itself is created here too, not just its cards -
+        // resetRenderState() wipes #slot-modules's innerHTML at the start
+        // of every scan, so nothing inside it can be assumed to survive
+        // between scans; each render pass has to be able to rebuild the
+        // whole skeleton from nothing.
+        let aggregatesSlot = document.getElementById('slot-aggregates');
+        if (!aggregatesSlot) {
+            modulesSlot.insertAdjacentHTML('afterbegin', '<div id="slot-aggregates" class="results-grid"></div>');
+            aggregatesSlot = document.getElementById('slot-aggregates');
+        }
         const html = AGGREGATE_DEFS.map(def =>
             `<div id="${def.id}" class="reveal-in card p-5" style="display:none"></div>`
         ).join('');
@@ -1607,7 +1615,7 @@
         lastScanLogs = logs;
 
         const modulesSlot = document.getElementById('slot-modules');
-        ensureAggregatePlaceholders(document.getElementById('slot-aggregates'));
+        ensureAggregatePlaceholders(modulesSlot);
         updateAggregateCards(collectAggregates(logs));
         ensureCategoryPlaceholders(modulesSlot);
 
