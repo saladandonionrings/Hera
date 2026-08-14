@@ -167,6 +167,7 @@ class BlackbirdScanner:
             ("Discord", f"https://discord.com/invite/{self.username}", "discord_size_check", 22000),
             ("Steam", f"https://steamcommunity.com/id/{self.username}", "text_present", "g_rgProfileData"),
             ("Roblox", f"https://www.roblox.com/user.aspx?username={self.username}", "url_not_contains", "users/0/profile"),
+            ("Faceit", f"https://www.faceit.com/en/players/{self.username}", "status", 200),
             ("Tracker.gg", f"https://tracker.gg/valorant/profile/riot/{self.username}/overview", "status", 200),
             ("Chess.com", f"https://www.chess.com/member/{self.username}", "status", 200),
             ("Lichess", f"https://lichess.org/@/{self.username}", "status", 200),
