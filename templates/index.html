@@ -137,6 +137,12 @@
             align-items: start;
         }
 
+        /* Spacing between the aggregate summary grid and each category
+           section below it, and between consecutive category sections. */
+        #slot-modules > section {
+            margin-top: 2rem;
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: .01ms !important;
@@ -230,17 +236,22 @@
                 </button>
             </div>
 
-            <!-- Results - a single responsive grid: aggregate summary cards
+            <!-- Results, grouped into sections: the aggregate summary cards
                  (profile pictures / names / locations / usernames / emails /
-                 phones) and every per-site card are all children of the same
-                 #slot-modules grid, in discovery order, wrapping to as many
-                 columns as the viewport allows. Only the stealer-logs
-                 (breach) block stays outside it, as a distinct full-width
-                 danger section. -->
+                 phones) always come first in their own grid, then every
+                 per-site card is routed into a category section (Réseaux
+                 sociaux, Gaming, Musique...) based on its site, each with
+                 its own responsive grid. Sections stay in a fixed order and
+                 hidden until they have a card. Leaks & Sécurité is last, so
+                 it sits directly above the stealer-logs (breach) block,
+                 which stays outside the grid entirely as a distinct
+                 full-width danger section. -->
             <main aria-live="polite">
                 <div id="slot-loading"></div>
                 <div id="slot-modules-wrap">
-                    <div id="slot-modules" class="results-grid"></div>
+                    <div id="slot-modules">
+                        <div id="slot-aggregates" class="results-grid"></div>
+                    </div>
                 </div>
                 <div id="slot-hudson" class="mt-8"></div>
             </main>
@@ -1188,12 +1199,86 @@
         { id: 'agg-phones', icon: 'fa-solid fa-phone', title: 'Phones' },
     ];
 
-    function ensureAggregatePlaceholders(modulesSlot) {
+    function ensureAggregatePlaceholders(aggregatesSlot) {
         if (document.getElementById(AGGREGATE_DEFS[0].id)) return;
         const html = AGGREGATE_DEFS.map(def =>
             `<div id="${def.id}" class="reveal-in card p-5" style="display:none"></div>`
         ).join('');
-        modulesSlot.insertAdjacentHTML('afterbegin', html);
+        aggregatesSlot.insertAdjacentHTML('afterbegin', html);
+    }
+
+    // Every per-site card is routed into one of these fixed-order category
+    // sections based on its title (see categoryForTitle below), instead of
+    // one flat undifferentiated grid. Each section is created hidden and
+    // only revealed once it gets its first card. Leaks & Sécurité is last
+    // so it lands right above the stealer-logs breach section, which
+    // renders separately outside this grid entirely.
+    const CATEGORY_DEFS = [
+        { id: 'social', title: 'Réseaux sociaux', icon: 'fa-solid fa-users' },
+        { id: 'gaming', title: 'Gaming', icon: 'fa-solid fa-gamepad' },
+        { id: 'music', title: 'Musique & Vidéo', icon: 'fa-solid fa-music' },
+        { id: 'sport', title: 'Sport', icon: 'fa-solid fa-futbol' },
+        { id: 'dev', title: 'Dev & Tech', icon: 'fa-solid fa-code' },
+        { id: 'art', title: 'Art & Créatif', icon: 'fa-solid fa-palette' },
+        { id: 'dating', title: 'Dating & Adultes', icon: 'fa-solid fa-heart' },
+        { id: 'lifestyle', title: 'Voyage & Style de vie', icon: 'fa-solid fa-suitcase' },
+        { id: 'writing', title: 'Forums & Écriture', icon: 'fa-solid fa-pen-nib' },
+        { id: 'identity', title: 'Identité & Télécom', icon: 'fa-solid fa-id-card' },
+        { id: 'money', title: 'Finance & Marketplace', icon: 'fa-solid fa-money-bill-wave' },
+        { id: 'other', title: 'Autres', icon: 'fa-solid fa-layer-group' },
+        { id: 'leaks', title: 'Leaks & Sécurité', icon: 'fa-solid fa-triangle-exclamation' },
+    ];
+
+    function ensureCategoryPlaceholders(modulesSlot) {
+        if (document.getElementById(`cat-${CATEGORY_DEFS[0].id}`)) return;
+        const html = CATEGORY_DEFS.map(def => `
+            <section id="cat-${def.id}" style="display:none">
+                <div class="section-label"><i class="${def.icon}"></i> ${def.title}</div>
+                <div class="results-grid" id="cat-${def.id}-grid"></div>
+            </section>
+        `).join('');
+        modulesSlot.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Best-effort keyword match against a card's title (a dedicated
+    // module's own header, or a bucket-split site name) - falls through to
+    // "other" for anything unrecognized, which mainly catches Maigret's
+    // own huge and unpredictable site database (thousands of sites, too
+    // many and too varied to enumerate here).
+    function categoryForTitle(title) {
+        const t = title.toUpperCase();
+        if (['HUDSON', 'LEAKCHECK', 'BREACH', 'STEALER'].some(k => t.includes(k))) return 'leaks';
+        if ([
+            'X (TWITTER)', 'TWITTER.COM', 'SNAPCHAT', 'TELEGRAM', 'MASTODON', 'GAB', 'INSTAGRAM',
+            'TIKTOK', 'REDDIT', 'FACEBOOK', 'TUMBLR', 'LINKTREE', 'GRAVATAR', 'WORDPRESS',
+            'EMAIL TO SOCIAL MEDIA', 'SOCIAL MEDIAS',
+        ].some(k => t.includes(k))) return 'social';
+        if ([
+            'TWITCH', 'KICK', 'DISCORD', 'STEAM', 'ROBLOX', 'TRACKER.GG', 'CHESS', 'LICHESS',
+            'XBOXGAMERTAG', 'XBOX', 'FORTNITE', 'PSNPROFILES', 'PSN', 'VLR.GG', 'JEUXVIDEO',
+            'POKEMONSHOWDOWN', 'POKEMON SHOWDOWN', 'MINECRAFT', 'FACEIT', 'EA.COM', 'NEXON',
+        ].some(k => t.includes(k))) return 'gaming';
+        if ([
+            'GENIUS', 'SPOTIFY', 'SOUNDCLOUD', 'LETTERBOXD', 'VIMEO', 'YOUTUBE', 'DAILYMOTION',
+            'BANDLAB', 'SMULE', 'STATS.FM',
+        ].some(k => t.includes(k))) return 'music';
+        if (['ESPN'].some(k => t.includes(k))) return 'sport';
+        if ([
+            'GITHUB', 'GITLAB', 'BUGCROWD', 'KEYBASE', 'REPLIT', 'HACKERNEWS', 'YCOMBINATOR',
+            'NPMJS', 'DOCKER', 'BITBUCKET',
+        ].some(k => t.includes(k))) return 'dev';
+        if (['BEHANCE', 'VSCO', 'FLICKR', 'PINTEREST', 'PICSART', 'IMAGESHACK', 'ADOBE'].some(k => t.includes(k))) return 'art';
+        if (['TINDER', 'XVIDEOS', 'PORNHUB'].some(k => t.includes(k))) return 'dating';
+        if (['POLARSTEPS', 'TRIPADVISOR', 'VIVINO', 'WEEDMAPS'].some(k => t.includes(k))) return 'lifestyle';
+        if ([
+            'MEDIUM', 'WATTPAD', 'DUOLINGO', 'QUORA', 'SLIDESHARE', 'GOODREADS', 'TRELLO', 'ACADEMIA',
+        ].some(k => t.includes(k))) return 'writing';
+        if ([
+            'GOOGLE IDENTITY', 'PROTONMAIL', 'PROTON', 'PHONE NUMBER', 'ORANGE.FR', 'SFR.FR',
+            'CANALPLUS', 'MYCANAL',
+        ].some(k => t.includes(k))) return 'identity';
+        if (['PATREON', 'BUYMEACOFFEE', 'GUMROAD', 'LEBOINCOIN', 'LEBONCOIN'].some(k => t.includes(k))) return 'money';
+        return 'other';
     }
 
     function updateAggregateCards(agg) {
@@ -1522,8 +1607,9 @@
         lastScanLogs = logs;
 
         const modulesSlot = document.getElementById('slot-modules');
-        ensureAggregatePlaceholders(modulesSlot);
+        ensureAggregatePlaceholders(document.getElementById('slot-aggregates'));
         updateAggregateCards(collectAggregates(logs));
+        ensureCategoryPlaceholders(modulesSlot);
 
         // --- Per-site cards ---
         // Rich modules (their own module_header, several fields each - e.g.
@@ -1565,8 +1651,12 @@
                 return;
             }
             renderedKeys.modules.set(key, richness);
-            const delay = modulesSlot.children.length * 60;
-            modulesSlot.insertAdjacentHTML('beforeend', renderModuleBlockCard(block, delay));
+            const category = categoryForTitle(block.title);
+            const section = document.getElementById(`cat-${category}`);
+            const grid = document.getElementById(`cat-${category}-grid`);
+            if (section) section.style.display = '';
+            const delay = renderedKeys.modules.size * 60;
+            (grid || modulesSlot).insertAdjacentHTML('beforeend', renderModuleBlockCard(block, delay));
         };
         richBlocks.forEach(insertCard);
         bucketBlocks.forEach(bucket => splitBucketBlock(bucket, target).forEach(insertCard));
