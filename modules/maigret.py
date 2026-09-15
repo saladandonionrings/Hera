@@ -66,7 +66,8 @@ ALREADY_COVERED_SITES = {
     "duolingo", "quora", "slideshare", "goodreads", "buymeacoffee", "patreon",
     "gravatar", "polarsteps", "minecraft", "gitlab", "hackernews", "npm",
     "docker hub", "bitbucket", "smule", "pokemon showdown", "xbox gamertag",
-    "picsart", "trello", "youtube", "calendly",
+    "picsart", "trello", "youtube", "calendly", "vinted", "faceit", "tripadvisor",
+    "pornhub", "fortnite tracker",
 }
 
 EXCLUDED_SITES = FALSE_POSITIVE_SITES | ALREADY_COVERED_SITES

@@ -64,7 +64,8 @@ from modules import (
     SmuleScanner,
     PokemonShowdownScanner,
     XboxGamertagScanner,
-    LeakCheckScanner
+    LeakCheckScanner,
+    VintedScanner
 )
 
 # encoding
@@ -243,6 +244,7 @@ class EpeiosPro:
                     ("trello.com", TrelloScanner()),
                     ("wattpad.com", WattpadScanner()),
                     ("roblox.com", RobloxScanner()),
+                    ("vinted.fr", VintedScanner()),
                 ]
                 default_links = {
                     "picsart.com": f"https://api.picsart.com/users/show/{self.target}.json",

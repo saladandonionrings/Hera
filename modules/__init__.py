@@ -49,3 +49,4 @@ from .smule import SmuleScanner
 from .pokemonshowdown import PokemonShowdownScanner
 from .xboxgamertag import XboxGamertagScanner
 from .leakcheck import LeakCheckScanner
+from .vinted import VintedScanner
