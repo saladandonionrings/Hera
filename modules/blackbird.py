@@ -1,9 +1,9 @@
 import os
-import re
 import requests
 from core.display import console
 from core.scrape import extract_profile_meta, print_profile_meta
 from dotenv import load_dotenv
+from urllib.parse import quote
 import uuid
 
 load_dotenv()
@@ -108,6 +108,58 @@ class BlackbirdScanner:
 
         return True, meta
 
+    def check_polarsteps(self):
+        """Polarsteps existence via its own internal API
+        (api.polarsteps.com), which returns clean profile fields directly
+        instead of the fragile CSS-module-hashed class name scraping the
+        HTML page required. The browser's own CORS preflight (an OPTIONS
+        request) doesn't need replicating here - that's purely a browser
+        mechanism, not something a server-side request has to satisfy."""
+        try:
+            res = requests.get(
+                f"https://api.polarsteps.com/users/byusername/{quote(self.username)}",
+                headers={
+                    "accept": "*/*",
+                    "polarsteps-api-version": "73",
+                    "origin": "https://www.polarsteps.com",
+                    "referer": "https://www.polarsteps.com/",
+                    "user-agent": self.headers["User-Agent"],
+                },
+                timeout=10,
+            )
+            if res.status_code != 200:
+                return False, {}
+            data = res.json()
+            if not data.get("id"):
+                return False, {}
+        except Exception:
+            return False, {}
+
+        meta = {}
+        avatar_obj = data.get("avatar") or {}
+        avatar = avatar_obj.get("thumbnail_path") or avatar_obj.get("path")
+        if avatar:
+            meta["avatar"] = avatar
+
+        full_name = " ".join(p for p in [data.get("first_name"), data.get("last_name")] if p)
+        if full_name:
+            meta["name"] = full_name
+        elif data.get("username"):
+            meta["name"] = data["username"]
+
+        if data.get("description"):
+            meta["bio"] = data["description"]
+
+        stats = []
+        if data.get("trip_count") is not None:
+            stats.append(f"{data['trip_count']} trips")
+        if data.get("follower_count") is not None:
+            stats.append(f"{data['follower_count']} followers")
+        if stats:
+            meta["stats"] = " / ".join(stats)
+
+        return True, meta
+
     def check_nexon(self):
         """Vérification via l'API interne de Nexon (Email ou Username)"""
         url = "https://www.nexon.com/api/regional-auth/v1.0/no-auth/login/validate"
@@ -168,7 +220,6 @@ class BlackbirdScanner:
             ("Steam", f"https://steamcommunity.com/id/{self.username}", "text_present", "g_rgProfileData"),
             ("Roblox", f"https://www.roblox.com/user.aspx?username={self.username}", "url_not_contains", "users/0/profile"),
             ("Faceit", f"https://www.faceit.com/en/players/{self.username}", "status", 200),
-            ("Tracker.gg", f"https://tracker.gg/valorant/profile/riot/{self.username}/overview", "status", 200),
             ("Chess.com", f"https://www.chess.com/member/{self.username}", "status", 200),
             ("Lichess", f"https://lichess.org/@/{self.username}", "status", 200),
 
@@ -194,7 +245,11 @@ class BlackbirdScanner:
             ("Behance", f"https://www.behance.net/{self.username}", "status", 200),
             ("VSCO", f"https://vsco.co/{self.username}/gallery", "status", 200),
             ("Flickr", f"https://www.flickr.com/people/{self.username}/", "status", 200),
-            ("Tumblr", f"https://www.tumblr.com/{self.username}", "status", 200),
+            # A missing Tumblr blog returns a genuine 404 at this URL -
+            # following redirects (the default) can land on a 200 fallback
+            # page regardless of whether the account exists, so this check
+            # looks at the raw status before any redirect is followed.
+            ("Tumblr", f"https://www.tumblr.com/{self.username}", "tumblr_check", None),
 
             # --- dating, adults ---
             ("Tinder", f"https://tinder.com/@{self.username}", "text_not_present", "The person you're looking for may have changed their ID but there are plenty more people to see on Tinder."),
@@ -214,12 +269,10 @@ class BlackbirdScanner:
             ("BuyMeACoffee", f"https://www.buymeacoffee.com/{self.username}", "text_not_present", "couldn't find that page"),
             ("Patreon", f"https://www.patreon.com/{self.username}", "status", 200),
             ("Gravatar", f"http://en.gravatar.com/{self.username}.json", "text_present", '"profileUrl"'),
-            # Was "response_url", a check_type that was never actually
-            # implemented in the dispatch below - Polarsteps never reported
-            # a hit no matter what. "url_not_contains" does exactly what
-            # was intended here (missing accounts redirect to a URL
-            # containing "user-not-found") and already exists below.
-            ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "url_not_contains", "user-not-found"),
+            # Now via check_polarsteps (Polarsteps' own api.polarsteps.com
+            # API) instead of scraping the HTML page - more reliable and
+            # returns real profile fields directly.
+            ("Polarsteps", f"https://www.polarsteps.com/{self.username}", "polarsteps_check", None),
             ("TripAdvisor", f"https://www.tripadvisor.com/Profile/{self.username}", "status", 200),
 
             # --- gaming, video ---
@@ -232,10 +285,11 @@ class BlackbirdScanner:
             # instead, which actually distinguishes found from not-found.
             ("VLR.gg", f"https://www.vlr.gg/user/{self.username}", "text_not_present", "Page Not Found"),
             ("JeuxVideo.com", f"https://www.jeuxvideo.com/profil/{self.username}", "text_not_present", "Profil introuvable"),
-            # A missing Dailymotion account 404s on the /user/ path - the
-            # bare https://www.dailymotion.com/{username} page returns 200
-            # regardless of whether the account exists (false positives).
-            ("Dailymotion", f"https://www.dailymotion.com/user/{self.username}", "status", 200),
+            # A missing Dailymotion account can still come back 200 (soft
+            # 404 - the SPA shell renders client-side) with "not_found" or
+            # "Not found" somewhere in the response instead of a real 404
+            # status, so status alone isn't reliable.
+            ("Dailymotion", f"https://www.dailymotion.com/user/{self.username}", "dailymotion_check", None),
             # Same as Replit above - a missing BandLab account still
             # returns 200 with the site's generic default og:image.
             ("BandLab", f"https://www.bandlab.com/{self.username}", "text_not_present", "https://www.bandlab.com/web-app/images/open-graph-4fd21aa09f.png"),
@@ -292,6 +346,32 @@ class BlackbirdScanner:
                             avatars.append((site, meta["avatar"]))
                     continue
 
+                if check_type == "polarsteps_check":
+                    is_found, meta = self.check_polarsteps()
+                    if is_found:
+                        console.success(site, url)
+                        found_any = True
+                        print_profile_meta(meta)
+                        if meta.get("avatar"):
+                            avatars.append((site, meta["avatar"]))
+                    continue
+
+                if check_type == "tumblr_check":
+                    is_found = False
+                    try:
+                        tumblr_res = session.get(url, headers=self.headers, timeout=10, allow_redirects=False)
+                        is_found = tumblr_res.status_code != 404
+                    except Exception:
+                        pass
+                    if is_found:
+                        console.success(site, url)
+                        found_any = True
+                        meta = extract_profile_meta(tumblr_res.text)
+                        print_profile_meta(meta)
+                        if meta.get("avatar"):
+                            avatars.append((site, meta["avatar"]))
+                    continue
+
                 res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
                 is_found = False
 
@@ -335,6 +415,8 @@ class BlackbirdScanner:
                         if self.username.lower() in res.text.lower() and "show_error=true" not in res.url: is_found = True
                 elif check_type == "duolingo_check":
                     if res.status_code == 200 and "/errors/" not in res.url and "Learn a language for free" not in res.text: is_found = True
+                elif check_type == "dailymotion_check":
+                    if res.status_code == 200 and "not_found" not in res.text and "Not found" not in res.text: is_found = True
 
                 if is_found:
                     final_url = url
@@ -355,17 +437,6 @@ class BlackbirdScanner:
                             meta = {}
                     else:
                         meta = extract_profile_meta(res.text)
-                        if site == "Polarsteps":
-                            # Polarsteps doesn't set a useful og:title (no
-                            # real display name) - the actual name only
-                            # shows up in a CSS-module-hashed class like
-                            # "UserWidget-module_name__aB3dE", so match on
-                            # the stable prefix and ignore the random suffix.
-                            name_match = re.search(
-                                r'class="UserWidget-module_name[^"]*"[^>]*>([^<]+)<', res.text
-                            )
-                            if name_match:
-                                meta["name"] = name_match.group(1).strip()
 
                     print_profile_meta(meta)
                     if meta.get("avatar"):
