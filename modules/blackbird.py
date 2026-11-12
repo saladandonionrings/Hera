@@ -224,8 +224,15 @@ class BlackbirdScanner:
             ("Lichess", f"https://lichess.org/@/{self.username}", "status", 200),
 
             # --- music, video, cinema ---
-            ("Genius (User)", f"https://genius.com/{self.username}", "status", 200),
-            ("Genius (Artist)", f"https://genius.com/artists/{self.username}", "status", 200),
+            # A username containing a dot (e.g. "thing.do") can get
+            # silently resolved by Genius to just "thing" (web frameworks
+            # commonly treat a trailing ".xyz" in a path as a format
+            # extension) instead of 404ing - a bare status check would
+            # then wrongly report the full dotted username as found.
+            # Requiring the exact username to appear in the response
+            # catches that mismatch.
+            ("Genius (User)", f"https://genius.com/{self.username}", "genius_check", None),
+            ("Genius (Artist)", f"https://genius.com/artists/{self.username}", "genius_check", None),
             # A missing/private Spotify user still returns 200 with
             # "spotify:user:" present in the page's client-side routing
             # template regardless of the username (false positives) - the
@@ -389,6 +396,8 @@ class BlackbirdScanner:
                         content_low = res.text.lower()
                         error_msg = "requested page was not found"
                         if self.username.lower() in content_low and error_msg not in content_low: is_found = True
+                elif check_type == "genius_check":
+                    if res.status_code == 200 and self.username.lower() in res.text.lower(): is_found = True
                 elif check_type == "github_api_check":
                     if res.status_code == 200 and "login" in res.text:
                         is_found = True
