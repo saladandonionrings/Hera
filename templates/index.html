@@ -179,10 +179,6 @@
                         class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-sky-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-key text-sm"></i>
                 </button>
-                <button type="button" onclick="toggleLogsDrawer()" title="View raw output"
-                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-sky-400 hover:bg-white/5 transition-colors">
-                    <i class="fa-solid fa-terminal text-sm"></i>
-                </button>
             </div>
         </div>
         <div class="h-[2px] bg-white/[.06] overflow-hidden">
@@ -264,26 +260,6 @@
     <footer class="text-center mono text-[11px] text-zinc-400 pb-8 px-5">
         Responsible use only — your own data, or with explicit authorization.
     </footer>
-
-    <!-- ===== LOGS DRAWER ===== -->
-    <div id="logs-overlay" onclick="toggleLogsDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
-    <div id="logs-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[36rem] bg-[#0f1116] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
-        <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
-            <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-terminal text-sky-400 text-sm"></i>
-                <span class="text-[15px] text-zinc-100 font-semibold">Raw output</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-                <button type="button" onclick="copyLogs()" title="Copy" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-sky-400 hover:bg-white/5 transition-colors">
-                    <i id="copy-icon" class="fa-regular fa-copy"></i>
-                </button>
-                <button type="button" onclick="toggleLogsDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-        </div>
-        <pre id="raw-logs" class="mono flex-1 overflow-y-auto p-6 text-[13px] leading-relaxed text-zinc-400">Waiting...</pre>
-    </div>
 
     <!-- ===== GHUNT AUTH DRAWER ===== -->
     <div id="ghunt-overlay" onclick="toggleGhuntDrawer()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"></div>
@@ -415,31 +391,6 @@
 
     function getFavicon(site) {
         return `https://www.google.com/s2/favicons?domain=${encodeURIComponent((site || '').trim())}&sz=64`;
-    }
-
-    function toggleLogsDrawer() {
-        const drawer = document.getElementById('logs-drawer');
-        const overlay = document.getElementById('logs-overlay');
-        const isOpen = !drawer.classList.contains('translate-x-full');
-        if (isOpen) {
-            drawer.classList.add('translate-x-full');
-            overlay.classList.add('hidden');
-        } else {
-            drawer.classList.remove('translate-x-full');
-            overlay.classList.remove('hidden');
-        }
-    }
-
-    async function copyLogs() {
-        const logsElement = document.getElementById('raw-logs');
-        const icon = document.getElementById('copy-icon');
-        try {
-            await navigator.clipboard.writeText(logsElement.textContent || '');
-            icon.className = 'fa-solid fa-check text-emerald-400';
-        } catch (e) {
-            icon.className = 'fa-solid fa-xmark text-red-500';
-        }
-        setTimeout(() => { icon.className = 'fa-regular fa-copy'; }, 1500);
     }
 
     function toggleGhuntDrawer() {
@@ -1613,9 +1564,7 @@
     // chips into their fixed slot - already-rendered results are never touched,
     // so nothing re-animates or flickers as later updates arrive.
     function renderResults(target, logs, isFinal) {
-        const logsElement = document.getElementById('raw-logs');
         const exportBar = document.getElementById('export-bar');
-        logsElement.textContent = logs || "No output.";
         lastScanTarget = target;
         lastScanLogs = logs;
 
@@ -1763,7 +1712,6 @@
         document.getElementById('dashboard').classList.remove('hidden');
 
         const targetSummary = document.getElementById('target-summary');
-        const logsElement = document.getElementById('raw-logs');
         const exportBar = document.getElementById('export-bar');
         const loadingSlot = document.getElementById('slot-loading');
 
@@ -1782,7 +1730,6 @@
             </div>
             <p class="text-[15px] text-zinc-100 break-all font-medium">${escapeHtml(target)}</p>`;
         loadingSlot.innerHTML = loadingSkeleton();
-        logsElement.textContent = "› Scanning...";
         setStatus('SCANNING...', 'bg-sky-500', true, 'text-sky-400');
 
         let gotAnyUpdate = false;

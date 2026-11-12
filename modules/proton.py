@@ -15,9 +15,15 @@ class ProtonScanner:
         url = "https://account.proton.me/api/auth/v4/sessions"
         try:
             response = requests.post(url, headers=self.headers, timeout=10)
+        except Exception as e:
+            return None, None, f"request failed ({e})"
+        if response.status_code != 200:
+            return None, None, f"HTTP {response.status_code}: {response.text[:150]}"
+        try:
             data = response.json()
-            return data['UID'], f"Bearer {data['AccessToken']}"
-        except: return None, None
+            return data['UID'], f"Bearer {data['AccessToken']}", None
+        except Exception as e:
+            return None, None, f"unexpected response shape ({e})"
 
     def get_pgp_info(self, email):
         url = f"https://api.protonmail.ch/pks/lookup?op=index&search={email}"
@@ -33,9 +39,9 @@ class ProtonScanner:
     def scan(self, email):
         console.module_header("ProtonMail")
         
-        uid, auth = self.generate_auth_session()
+        uid, auth, reason = self.generate_auth_session()
         if not uid:
-            console.error("Proton API", "Failed to initialize session.")
+            console.error("Proton API", f"Failed to initialize session ({reason}).")
             return
 
         self.headers["x-pm-uid"] = uid
