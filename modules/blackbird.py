@@ -311,10 +311,13 @@ class BlackbirdScanner:
             try:
                 if check_type == "pinterest_check":
                     is_found, meta = self.check_pinterest_keyapi() if KEYAPI_KEY else (False, {})
-                    if not is_found and not KEYAPI_KEY:
-                        # No API key configured - fall back to the old
-                        # redirect heuristic (missing accounts redirect, via
-                        # allow_redirects, to pinterest.com/?show_error=true).
+                    if not is_found:
+                        # No API key configured, or the keyapi.ai call
+                        # itself failed (quota exhausted, outage, etc.) -
+                        # either way, fall back to the old redirect
+                        # heuristic (missing accounts redirect, via
+                        # allow_redirects, to pinterest.com/?show_error=true)
+                        # rather than reporting nothing at all.
                         res = session.get(url, headers=self.headers, timeout=10, allow_redirects=True)
                         if res.status_code == 200 and "show_error=true" not in res.url:
                             is_found = True
@@ -329,9 +332,10 @@ class BlackbirdScanner:
 
                 if check_type == "x_check":
                     is_found, meta = self.check_twitter_keyapi() if KEYAPI_KEY else (False, {})
-                    if not is_found and not KEYAPI_KEY:
-                        # No API key configured - fall back to scraping
-                        # third-party nitter mirrors for the profile page.
+                    if not is_found:
+                        # Same as Pinterest above - fall back regardless of
+                        # whether keyapi.ai failed because no key is set or
+                        # because the call itself errored out.
                         instances = [f"https://nitter.net/{self.username}", f"https://nitter.cz/{self.username}", f"https://nitter.it/{self.username}"]
                         for instance_url in instances:
                             try:
