@@ -56,6 +56,25 @@ class EmailSocialScanner:
         except: pass
         return False
 
+    def check_notion(self):
+        url = "https://app.notion.com/api/v3/getLoginOptions"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
+            "Accept": "*/*",
+            "Content-Type": "application/json",
+            "Origin": "https://app.notion.com",
+            "Referer": "https://app.notion.com/login",
+        }
+        payload = {"email": self.target, "requireWorkTypeEmail": False}
+        try:
+            res = requests.post(url, headers=headers, json=payload, timeout=10)
+            if res.status_code == 200:
+                if res.json().get("hasAccount"):
+                    print(f"  ✓  notion.so                Account Found")
+                    return True
+        except: pass
+        return False
+
     def scan(self, render_header=True):
         if render_header:
             console.module_header("EMAIL TO SOCIAL MEDIA")
@@ -66,6 +85,8 @@ class EmailSocialScanner:
         if self.check_bitmoji():
             found = True
         if self.check_dealabs():
+            found = True
+        if self.check_notion():
             found = True
 
         try:
