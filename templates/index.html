@@ -6,18 +6,21 @@
     <meta name="description" content="Hera — digital footprint intelligence by email, username or phone number.">
     <meta name="theme-color" content="#0b0d12">
     <title>Hera — Web OSINT</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0d12'/%3E%3Crect x='7' y='7' width='86' height='86' rx='16' fill='%2338bdf8'/%3E%3Ctext x='50' y='67' font-size='48' font-family='Arial,sans-serif' font-weight='800' fill='%230b0d12' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0d12'/%3E%3Crect x='7' y='7' width='86' height='86' rx='16' fill='%23f43f5e'/%3E%3Ctext x='50' y='67' font-size='48' font-family='Arial,sans-serif' font-weight='800' fill='%230b0d12' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Design system: a plain, restrained dashboard rather than a themed
-           page - one accent (signal blue) for anything interactive, emerald/
-           amber/red reserved strictly for found/warning/danger states so
-           color always carries meaning instead of decorating. Legibility and
-           predictable structure over any particular visual gimmick.
+        /* Design system: a very minimalist, near-monochrome dark dashboard -
+           one accent (a deliberate red, used sparingly as isolated points of
+           color rather than painted across the UI) for anything interactive,
+           emerald/amber reserved strictly for found/warning states, a
+           separate (orange-leaning) red reserved strictly for danger/error
+           states so the two reds stay visually distinct and color always
+           carries meaning instead of decorating. Legibility and predictable
+           structure over any particular visual gimmick.
            Text colors are picked to clear WCAG AA contrast (4.5:1) against
            the dark surfaces they sit on, not just to look muted - a gray
            that reads as "subtle" on a light background is often close to
@@ -25,7 +28,7 @@
            --surface - brightened to ~5.5:1). */
         :root {
             color-scheme: dark;
-            --accent: 56, 189, 248;      /* sky-400 */
+            --accent: 251, 113, 133;      /* rose-400 */
             --bg: #0b0d12;
             --surface: #12141a;
             --surface-2: #171a21;
@@ -39,7 +42,7 @@
         * { scrollbar-width: thin; scrollbar-color: #2a2d36 transparent; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: #2a2d36; border-radius: 999px; }
-        ::selection { background: rgba(56, 189, 248, .28); color: #f4f4f5; }
+        ::selection { background: rgba(251, 113, 133, .28); color: #f4f4f5; }
 
         html { scroll-behavior: smooth; }
         body {
@@ -55,8 +58,8 @@
         /* Compact brand mark used once in the header and once (larger) in
            the hero - a plain rounded square, no coin/seal treatment. */
         .brand-mark {
-            background: linear-gradient(155deg, #38bdf8, #0ea5b7 65%);
-            box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 6px 16px -6px rgba(56,189,248,.45);
+            background: linear-gradient(155deg, #fb7185, #881337 65%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 6px 16px -6px rgba(251,113,133,.45);
         }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -80,7 +83,7 @@
 
         @keyframes pulseOnce {
             0% { transform: scale(1); }
-            35% { transform: scale(1.14); color: rgb(56 189 248); }
+            35% { transform: scale(1.14); color: rgb(var(--accent)); }
             100% { transform: scale(1); }
         }
         .pulse-once { animation: pulseOnce .5s cubic-bezier(.16,1,.3,1) both; }
@@ -176,13 +179,13 @@
                     <span id="status-text">IDLE</span>
                 </span>
                 <button type="button" onclick="toggleGhuntDrawer()" title="Credentials (GHunt / Telegram)"
-                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-sky-400 hover:bg-white/5 transition-colors">
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-key text-sm"></i>
                 </button>
             </div>
         </div>
         <div class="h-[2px] bg-white/[.06] overflow-hidden">
-            <div id="progress-bar" class="h-full w-1/3 bg-sky-400 opacity-0"></div>
+            <div id="progress-bar" class="h-full w-1/3 bg-rose-400 opacity-0"></div>
         </div>
     </header>
 
@@ -202,12 +205,12 @@
             </div>
 
             <form id="search-form" class="w-full max-w-2xl" autocomplete="off">
-                <div class="flex items-center gap-2 bg-[#12141a] border border-white/10 rounded-xl p-2 shadow-2xl shadow-black/40 focus-within:border-sky-400/50 focus-within:ring-4 focus-within:ring-sky-400/10 transition-all">
+                <div class="flex items-center gap-2 bg-[#12141a] border border-white/10 rounded-xl p-2 shadow-2xl shadow-black/40 focus-within:border-rose-400/50 focus-within:ring-4 focus-within:ring-rose-400/10 transition-all">
                     <i id="search-icon" class="fa-solid fa-magnifying-glass text-zinc-400 pl-3.5 text-base"></i>
                     <input id="target" type="text" placeholder="name@domain.com, username or +33612345678" aria-label="Target to investigate: email, username or phone number"
                            class="flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-[15px] px-3 py-3.5">
                     <button id="search-btn" type="submit"
-                            class="bg-sky-500 hover:bg-sky-400 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-[14px] px-5 py-3">
+                            class="bg-rose-500 hover:bg-rose-400 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-[14px] px-5 py-3">
                         <i id="search-btn-icon" class="fa-solid fa-arrow-right"></i>
                         <span id="search-btn-label">Scan</span>
                     </button>
@@ -228,7 +231,7 @@
             <!-- Export -->
             <div id="export-bar" class="hidden mb-6 flex justify-end gap-2">
                 <button type="button" onclick="exportMarkdown()" title="Export as Markdown"
-                        class="bg-[#12141a] border border-white/10 hover:border-sky-400/40 text-zinc-400 hover:text-sky-400 text-[13px] font-medium rounded-lg px-4 py-2.5 flex items-center gap-2 transition-all">
+                        class="bg-[#12141a] border border-white/10 hover:border-rose-400/40 text-zinc-400 hover:text-rose-400 text-[13px] font-medium rounded-lg px-4 py-2.5 flex items-center gap-2 transition-all">
                     <i class="fa-brands fa-markdown"></i> Markdown
                 </button>
                 <button type="button" onclick="exportPdf()" title="Export as PDF"
@@ -266,7 +269,7 @@
     <div id="ghunt-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[30rem] bg-[#0f1116] border-l border-white/10 z-50 translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
         <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-key text-sky-400 text-sm"></i>
+                <i class="fa-solid fa-key text-rose-400 text-sm"></i>
                 <span class="text-[15px] text-zinc-100 font-semibold">Credentials</span>
             </div>
             <button type="button" onclick="toggleGhuntDrawer()" title="Close" class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors">
@@ -278,13 +281,13 @@
                 <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">GHunt (Google Identity)</h3>
                 <p class="text-[14px] text-zinc-400 leading-relaxed">
                     The Google Identity module needs a GHunt session on the server. Install the
-                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 hover:underline">GHunt Companion</a>
+                    <a href="https://github.com/mxrch/ghunt_companion" target="_blank" rel="noopener noreferrer" class="text-rose-400 hover:text-rose-300 hover:underline">GHunt Companion</a>
                     browser extension, export your logged-in Google session as base64, then paste it below.
                 </p>
                 <textarea id="ghunt-cookies" rows="8" placeholder="Paste base64-encoded credentials here..."
-                          class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all resize-none"></textarea>
+                          class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3.5 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all resize-none"></textarea>
                 <button type="button" id="ghunt-login-btn" onclick="submitGhuntLogin()"
-                        class="w-full bg-sky-500 hover:bg-sky-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
+                        class="w-full bg-rose-500 hover:bg-rose-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
                     <i id="ghunt-login-icon" class="fa-solid fa-right-to-bracket"></i>
                     <span id="ghunt-login-label">Authenticate</span>
                 </button>
@@ -300,32 +303,32 @@
                 <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">Telegram (Phone module)</h3>
                 <p class="text-[14px] text-zinc-400 leading-relaxed">
                     Optional — enables the Telegram registration check on phone number scans. Create your own API app at
-                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 hover:underline">my.telegram.org/apps</a>,
+                    <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer" class="text-rose-400 hover:text-rose-300 hover:underline">my.telegram.org/apps</a>,
                     then log in below — Hera saves the API ID/Hash to <code class="mono bg-white/5 px-1 py-0.5 rounded">.env</code> automatically, no manual step needed.
                 </p>
 
                 <div class="grid grid-cols-2 gap-3">
                     <input id="tg-api-id" type="text" inputmode="numeric" placeholder="API ID"
-                           class="col-span-1 bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
+                           class="col-span-1 bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
                     <input id="tg-api-hash" type="text" placeholder="API Hash"
-                           class="col-span-1 bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
+                           class="col-span-1 bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
                 </div>
                 <input id="tg-phone" type="tel" placeholder="Your phone number, e.g. +33612345678"
-                       class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
+                       class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
 
                 <button type="button" id="tg-send-code-btn" onclick="submitTelegramSendCode()"
-                        class="w-full bg-sky-500 hover:bg-sky-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
+                        class="w-full bg-rose-500 hover:bg-rose-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
                     <i id="tg-send-code-icon" class="fa-solid fa-paper-plane"></i>
                     <span id="tg-send-code-label">Send code</span>
                 </button>
 
                 <div id="tg-verify-block" class="hidden space-y-3">
                     <input id="tg-code" type="text" inputmode="numeric" placeholder="Code received on Telegram"
-                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
+                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
                     <input id="tg-password" type="password" placeholder="2FA password (only if asked)"
-                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 transition-all">
+                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
                     <button type="button" id="tg-verify-btn" onclick="submitTelegramVerify()"
-                            class="w-full bg-sky-500 hover:bg-sky-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
+                            class="w-full bg-rose-500 hover:bg-rose-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
                         <i id="tg-verify-icon" class="fa-solid fa-check"></i>
                         <span id="tg-verify-label">Verify</span>
                     </button>
@@ -554,7 +557,7 @@
         label.textContent = text;
         label.parentElement.className = `mono text-[11px] font-semibold hidden sm:flex items-center gap-2 mr-1 ${textClass || 'text-zinc-600'}`;
         dot.className = `w-1.5 h-1.5 rounded-full ${dotClass} ${running ? 'animate-pulse' : ''}`;
-        progress.className = running ? 'h-full w-1/3 bg-sky-400 opacity-100 progress-run' : 'h-full w-1/3 bg-sky-400 opacity-0';
+        progress.className = running ? 'h-full w-1/3 bg-rose-400 opacity-100 progress-run' : 'h-full w-1/3 bg-rose-400 opacity-0';
     }
 
     function setLoading(isLoading) {
@@ -589,7 +592,7 @@
         form.className = 'w-full max-w-md';
         searchIcon.className = 'fa-solid fa-magnifying-glass text-zinc-400 pl-3.5 text-sm';
         input.className = 'flex-1 min-w-0 bg-transparent outline-none placeholder:text-zinc-600 text-zinc-100 text-sm px-2.5 py-2.5';
-        btn.className = 'bg-sky-500 hover:bg-sky-400 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5';
+        btn.className = 'bg-rose-500 hover:bg-rose-400 active:scale-[.97] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg flex items-center gap-2 shrink-0 transition-all text-sm px-4 py-2.5';
     }
 
     // Extracts success lines (✓ icon) from the raw stream and only keeps the ones that
@@ -787,7 +790,7 @@
     function renderValue(value) {
         if (/^https?:\/\//i.test(value)) {
             const href = safeUrl(value);
-            if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 hover:underline break-all">${escapeHtml(value)}</a>`;
+            if (href) return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-rose-400 hover:text-rose-300 hover:underline break-all">${escapeHtml(value)}</a>`;
         }
         return `<span class="break-words">${escapeHtml(value)}</span>`;
     }
@@ -830,7 +833,7 @@
             ? `<span class="block mt-1 text-center text-[10px] text-zinc-400 truncate max-w-[4.5rem]">${escapeHtml(label)}</span>`
             : '';
         return `<div class="flex flex-col items-center shrink-0">
-            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-[#171a21] hover:border-sky-400/50 transition-colors">
+            <a href="${src}" target="_blank" rel="noopener noreferrer" class="block w-12 h-12 rounded-full overflow-hidden border border-white/10 bg-[#171a21] hover:border-rose-400/50 transition-colors">
                 <img src="${src}" alt="" class="w-full h-full object-cover block" onerror="this.closest('div').style.display='none'">
             </a>
             ${caption}
@@ -949,7 +952,7 @@
         const headerRow = `<div class="flex items-center gap-1.5 min-w-0">
             ${siteIconHtml(domain, vis)}
             ${urlEntry
-                ? `<a href="${safeUrl(urlEntry.value)}" target="_blank" rel="noopener noreferrer" class="uppercase text-[12.5px] font-semibold tracking-wide text-sky-400 hover:text-sky-300 hover:underline truncate">${escapeHtml(block.title)}</a><i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-zinc-600 shrink-0"></i>`
+                ? `<a href="${safeUrl(urlEntry.value)}" target="_blank" rel="noopener noreferrer" class="uppercase text-[12.5px] font-semibold tracking-wide text-rose-400 hover:text-rose-300 hover:underline truncate">${escapeHtml(block.title)}</a><i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-zinc-600 shrink-0"></i>`
                 : `<span class="uppercase text-[12.5px] font-semibold tracking-wide text-zinc-400 truncate">${escapeHtml(block.title)}</span>`}
         </div>
         ${handle ? `<p class="text-[12.5px] text-zinc-400 truncate mt-0.5">@${escapeHtml(handle)}</p>` : ''}`;
@@ -1003,7 +1006,7 @@
         // Stable id (matches insertCard's key) so a later, richer render of
         // the same site can replace this card in place instead of being
         // silently skipped by the dedup guard.
-        return `<div id="card-${normalizeSiteKey(block.title)}" class="reveal-in glow-in card p-5${sizeClass}" style="--accent:96,165,250;animation-delay:${delayMs || 0}ms">
+        return `<div id="card-${normalizeSiteKey(block.title)}" class="reveal-in glow-in card p-5${sizeClass}" style="--accent:251,113,133;animation-delay:${delayMs || 0}ms">
             ${headHtml}
             ${nameHtml}
             ${descHtml}
@@ -1288,8 +1291,8 @@
                 <div class="h-3 w-2/3 rounded-full skeleton"></div>
             </div>
             <div class="flex items-center gap-2.5 mt-8">
-                <div class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></div>
-                <p class="mono text-[11px] text-sky-400 tracking-widest uppercase">Scanning modules…</p>
+                <div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                <p class="mono text-[11px] text-rose-400 tracking-widest uppercase">Scanning modules…</p>
             </div>
         </div>`;
     }
@@ -1302,7 +1305,7 @@
                 <div class="mono text-[10px] text-zinc-400 uppercase tracking-wider mt-0.5">Accounts</div>
             </div>
             <div class="card p-4 text-center">
-                <i class="fa-solid fa-layer-group text-sky-400 text-sm mb-2"></i>
+                <i class="fa-solid fa-layer-group text-rose-400 text-sm mb-2"></i>
                 <div id="stat-sections" class="text-2xl font-bold text-zinc-100 tracking-tight">0</div>
                 <div class="mono text-[10px] text-zinc-400 uppercase tracking-wider mt-0.5">Sections</div>
             </div>
@@ -1725,12 +1728,12 @@
         const isEmail = target.includes('@');
         targetSummary.innerHTML = `
             <div class="flex items-center gap-2 mb-1.5">
-                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-sky-400 text-xs"></i>
+                <i class="fa-solid ${isEmail ? 'fa-envelope' : 'fa-user'} text-rose-400 text-xs"></i>
                 <span class="mono text-[10px] uppercase tracking-wider text-zinc-400">Target</span>
             </div>
             <p class="text-[15px] text-zinc-100 break-all font-medium">${escapeHtml(target)}</p>`;
         loadingSlot.innerHTML = loadingSkeleton();
-        setStatus('SCANNING...', 'bg-sky-500', true, 'text-sky-400');
+        setStatus('SCANNING...', 'bg-rose-500', true, 'text-rose-400');
 
         let gotAnyUpdate = false;
         const es = new EventSource(`/scan-stream?target=${encodeURIComponent(target)}`);
