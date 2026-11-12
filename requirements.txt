@@ -25,3 +25,4 @@ telethon
 # API externes
 TikTokApi
 playwright
+instagrapi

@@ -178,7 +178,7 @@
                     <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-600"></span>
                     <span id="status-text">IDLE</span>
                 </span>
-                <button type="button" onclick="toggleGhuntDrawer()" title="Credentials (GHunt / Telegram)"
+                <button type="button" onclick="toggleGhuntDrawer()" title="Credentials (GHunt / Telegram / Instagram)"
                         class="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-white/5 transition-colors">
                     <i class="fa-solid fa-key text-sm"></i>
                 </button>
@@ -337,6 +337,41 @@
                 <div id="tg-login-result" class="hidden text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border"></div>
                 <p class="text-[12px] text-zinc-400 leading-relaxed">
                     This creates a Telegram user session on the server (via Telethon), saved as a <code class="mono bg-white/5 px-1 py-0.5 rounded">.session</code> file and reused for every scan afterwards. Only needs to be done once.
+                </p>
+            </section>
+
+            <div class="border-t border-white/10"></div>
+
+            <section class="space-y-5">
+                <h3 class="text-[13px] font-semibold text-zinc-300 uppercase tracking-wide">Instagram (profile lookups)</h3>
+                <p class="text-[14px] text-zinc-400 leading-relaxed">
+                    Optional — an authenticated Instagram session is far less likely to get rate-limited than anonymous lookups. Use a throwaway account, not your main one: automated logins can get an account challenged or banned by Instagram.
+                </p>
+
+                <input id="ig-username" type="text" placeholder="Instagram username"
+                       class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
+                <input id="ig-password" type="password" placeholder="Instagram password"
+                       class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
+
+                <button type="button" id="ig-login-btn" onclick="submitInstagramLogin()"
+                        class="w-full bg-rose-500 hover:bg-rose-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
+                    <i id="ig-login-icon" class="fa-solid fa-right-to-bracket"></i>
+                    <span id="ig-login-label">Log in</span>
+                </button>
+
+                <div id="ig-verify-block" class="hidden space-y-3">
+                    <input id="ig-code" type="text" inputmode="numeric" placeholder="Two-factor code"
+                           class="w-full bg-[#171a21] border border-white/10 rounded-xl p-3 text-[13px] mono text-zinc-100 outline-none focus:border-rose-500/50 focus:ring-4 focus:ring-rose-500/10 transition-all">
+                    <button type="button" id="ig-verify-btn" onclick="submitInstagramVerify()"
+                            class="w-full bg-rose-500 hover:bg-rose-400 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed text-[#0b0d12] font-semibold rounded-lg py-3 text-[14px] transition-all flex items-center justify-center gap-2">
+                        <i id="ig-verify-icon" class="fa-solid fa-check"></i>
+                        <span id="ig-verify-label">Verify</span>
+                    </button>
+                </div>
+
+                <div id="ig-login-result" class="hidden text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border"></div>
+                <p class="text-[12px] text-zinc-400 leading-relaxed">
+                    This creates an instagrapi session on the server, saved as <code class="mono bg-white/5 px-1 py-0.5 rounded">instagram_session.json</code> and reused for every scan afterwards. Only needs to be done once.
                 </p>
             </section>
         </div>
@@ -543,6 +578,98 @@
             document.getElementById('tg-password').value = '';
         } catch (error) {
             showTelegramResult(error.message, false);
+        } finally {
+            btn.disabled = false;
+            icon.className = 'fa-solid fa-check';
+            label.textContent = 'Verify';
+        }
+    }
+
+    let igLoginToken = null;
+
+    function showInstagramResult(message, ok) {
+        const resultEl = document.getElementById('ig-login-result');
+        resultEl.className = `text-[12px] mono whitespace-pre-wrap break-words rounded-xl p-3.5 border ${ok ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`;
+        resultEl.textContent = message;
+    }
+
+    async function submitInstagramLogin() {
+        const username = document.getElementById('ig-username').value.trim();
+        const password = document.getElementById('ig-password').value;
+        const btn = document.getElementById('ig-login-btn');
+        const icon = document.getElementById('ig-login-icon');
+        const label = document.getElementById('ig-login-label');
+
+        if (!username || !password) {
+            showInstagramResult('Username and password are both required.', false);
+            return;
+        }
+
+        btn.disabled = true;
+        icon.className = 'fa-solid fa-circle-notch fa-spin';
+        label.textContent = 'Logging in…';
+        document.getElementById('ig-login-result').className = 'hidden';
+
+        try {
+            const response = await fetch('/instagram-login/start', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: username, password: password})
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Server error (${response.status})`);
+
+            if (data.needs_code) {
+                igLoginToken = data.token;
+                document.getElementById('ig-verify-block').classList.remove('hidden');
+                showInstagramResult(data.message || 'Two-factor code required.', true);
+                return;
+            }
+
+            showInstagramResult(data.message || 'Authenticated.', true);
+        } catch (error) {
+            showInstagramResult(error.message, false);
+        } finally {
+            btn.disabled = false;
+            icon.className = 'fa-solid fa-right-to-bracket';
+            label.textContent = 'Log in';
+        }
+    }
+
+    async function submitInstagramVerify() {
+        const code = document.getElementById('ig-code').value.trim();
+        const btn = document.getElementById('ig-verify-btn');
+        const icon = document.getElementById('ig-verify-icon');
+        const label = document.getElementById('ig-verify-label');
+
+        if (!igLoginToken) {
+            showInstagramResult('Log in first.', false);
+            return;
+        }
+        if (!code) {
+            showInstagramResult('Enter the two-factor code.', false);
+            return;
+        }
+
+        btn.disabled = true;
+        icon.className = 'fa-solid fa-circle-notch fa-spin';
+        label.textContent = 'Verifying…';
+
+        try {
+            const response = await fetch('/instagram-login/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token: igLoginToken, code: code})
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) throw new Error(data.error || `Server error (${response.status})`);
+
+            showInstagramResult(data.message || 'Authenticated.', true);
+            igLoginToken = null;
+            document.getElementById('ig-verify-block').classList.add('hidden');
+            document.getElementById('ig-code').value = '';
+        } catch (error) {
+            showInstagramResult(error.message, false);
         } finally {
             btn.disabled = false;
             icon.className = 'fa-solid fa-check';

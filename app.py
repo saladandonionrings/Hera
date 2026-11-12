@@ -17,6 +17,9 @@ app = Flask(__name__)
 # Pending Telegram logins, keyed by a one-time token: token -> {api_id, api_hash, phone, phone_code_hash}
 _telegram_login_sessions = {}
 
+# Pending Instagram logins awaiting a 2FA code, keyed by a one-time token: token -> {username, password}
+_instagram_login_sessions = {}
+
 def clean_ansi(text):
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     return ansi_escape.sub('', text)
@@ -40,6 +43,17 @@ def _persist_telegram_credentials(api_id, api_hash):
         open(dotenv_path, "a").close()
     set_key(dotenv_path, "TELEGRAM_API_ID", api_id)
     set_key(dotenv_path, "TELEGRAM_API_HASH", api_hash)
+
+def _persist_instagram_credentials(username, password):
+    """Writes INSTAGRAM_USERNAME/INSTAGRAM_PASSWORD to .env so
+    modules/instagram_session.py picks them up immediately and so they
+    survive a server restart, without requiring a manual .env edit."""
+    from dotenv import set_key
+    dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(dotenv_path):
+        open(dotenv_path, "a").close()
+    set_key(dotenv_path, "INSTAGRAM_USERNAME", username)
+    set_key(dotenv_path, "INSTAGRAM_PASSWORD", password)
 
 @app.route('/')
 def index():
@@ -173,6 +187,75 @@ def telegram_login_verify():
     finally:
         if client is not None:
             client.disconnect()
+
+@app.route('/instagram-login/start', methods=['POST'])
+def instagram_login_start():
+    """Step 1: log into the configured Instagram account. Succeeds outright
+    unless Instagram asks for a two-factor code, in which case the caller
+    moves on to /instagram-login/verify."""
+    payload = request.get_json(silent=True) or {}
+    username = (payload.get('username') or '').strip()
+    password = payload.get('password') or ''
+
+    if not (username and password):
+        return jsonify({"error": "Username and password are both required."}), 400
+
+    try:
+        from instagrapi import Client
+        from instagrapi.exceptions import TwoFactorRequired, ChallengeRequired, BadCredentials
+    except ImportError:
+        return jsonify({"error": "instagrapi not installed on the server (pip install instagrapi)."}), 500
+
+    from modules.instagram_session import SESSION_FILE
+
+    cl = Client()
+    try:
+        if os.path.exists(SESSION_FILE):
+            cl.load_settings(SESSION_FILE)
+        cl.login(username, password)
+        cl.dump_settings(SESSION_FILE)
+        _persist_instagram_credentials(username, password)
+        return jsonify({"success": True, "message": f"Authenticated as {username}. Session saved for future scans."})
+    except TwoFactorRequired:
+        token = uuid.uuid4().hex
+        _instagram_login_sessions[token] = {"username": username, "password": password}
+        return jsonify({"success": True, "needs_code": True, "token": token, "message": "Two-factor code required - check your authenticator app or SMS."})
+    except ChallengeRequired:
+        return jsonify({"error": "Instagram is requiring a security challenge (email/SMS confirmation or similar) on this account - log into it from a real browser first to clear it, then try again here."}), 400
+    except BadCredentials:
+        return jsonify({"error": "Incorrect username or password."}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/instagram-login/verify', methods=['POST'])
+def instagram_login_verify():
+    """Step 2: complete the login with the two-factor code Instagram sent."""
+    payload = request.get_json(silent=True) or {}
+    token = (payload.get('token') or '').strip()
+    code = (payload.get('code') or '').strip()
+
+    pending = _instagram_login_sessions.get(token)
+    if not pending:
+        return jsonify({"error": "No pending login for this token - start a login first."}), 400
+    if not code:
+        return jsonify({"error": "Verification code is required."}), 400
+
+    try:
+        from instagrapi import Client
+    except ImportError:
+        return jsonify({"error": "instagrapi not installed on the server (pip install instagrapi)."}), 500
+
+    from modules.instagram_session import SESSION_FILE
+
+    cl = Client()
+    try:
+        cl.login(pending["username"], pending["password"], verification_code=code)
+        cl.dump_settings(SESSION_FILE)
+        _persist_instagram_credentials(pending["username"], pending["password"])
+        del _instagram_login_sessions[token]
+        return jsonify({"success": True, "message": f"Authenticated as {pending['username']}. Session saved for future scans."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/scan', methods=['POST'])
 def start_investigation():

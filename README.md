@@ -44,6 +44,7 @@ pip3 install -r requirements.txt
 | `GOOGLE_CLIENT_ID` / `GOOGLE_PROJECT_ID` / `GOOGLE_CLIENT_SECRET` | Your own OAuth client for the Google profile-photo feature, create one at [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) (type: Desktop app) | no* |
 | `FACEBOOK_LSD_TOKEN` / `ESPN_API_KEY` | Override the built-in defaults if the platforms rotate them | no |
 | `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` | Your own Telegram API app : create one at [my.telegram.org/apps](https://my.telegram.org/apps) | no** |
+| `INSTAGRAM_USERNAME` / `INSTAGRAM_PASSWORD` | A throwaway Instagram account used for authenticated profile lookups (via [instagrapi](https://github.com/subzeroid/instagrapi)) - far less likely to get rate-limited than anonymous requests. Log in from the app's credentials drawer, which saves these and the resulting session automatically. **Don't use your main account** - automated logins can get it challenged or banned. | no |
 
 \* without the Google OAuth variables, identity lookup via GHunt **still works**; only the profile-photo fetch is skipped.
 

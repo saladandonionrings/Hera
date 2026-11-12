@@ -10,11 +10,12 @@ KEYAPI_KEY = os.getenv("KEYAPI_KEY")
 class InstagramScanner:
     """Extracts profile data from Instagram's public web_profile_info API.
 
-    Prefers keyapi.ai's proxy of that same endpoint when KEYAPI_KEY is
-    configured - more reliable than calling instagram.com directly, which
-    frequently rate-limits or serves an HTML login wall to requests that
-    look automated. Falls back to the direct call otherwise, so the module
-    still works with no API key configured."""
+    Prefers an authenticated private-API lookup via instagrapi (see
+    modules/instagram_session.py) when an Instagram account is configured -
+    an authenticated session is far less likely to get rate-limited than
+    anonymous requests. Falls back to keyapi.ai's proxy of the same
+    endpoint when KEYAPI_KEY is configured, then to calling instagram.com
+    directly, so the module still works with neither configured."""
 
     def __init__(self, username):
         self.username = username
@@ -24,6 +25,46 @@ class InstagramScanner:
             "referer": "https://www.instagram.com/",
             "accept": "*/*",
         }
+
+    def _fetch_via_instagrapi(self):
+        """Returns (user_dict_or_None, error_reason_or_None). instagrapi's
+        User model is already flat (follower_count, is_business...) rather
+        than Instagram's own nested edge_followed_by/is_business_account
+        shape - translated here so the shared rendering code in scan()
+        doesn't need a third code path."""
+        try:
+            from modules.instagram_session import get_authenticated_client
+        except Exception as e:
+            return None, f"instagrapi unavailable ({e})"
+
+        cl = get_authenticated_client()
+        if not cl:
+            return None, "no Instagram account configured for instagrapi (set INSTAGRAM_USERNAME/INSTAGRAM_PASSWORD)"
+
+        try:
+            from instagrapi.exceptions import UserNotFound
+        except Exception:
+            UserNotFound = ()
+
+        try:
+            user_model = cl.user_info_by_username(self.username)
+        except UserNotFound:
+            return None, "instagrapi reports the account does not exist"
+        except Exception as e:
+            return None, f"instagrapi lookup failed ({e})"
+
+        raw = (
+            user_model.model_dump(mode="json")
+            if hasattr(user_model, "model_dump")
+            else user_model.dict()
+        )
+        user = dict(raw)
+        user["edge_followed_by"] = {"count": raw.get("follower_count")}
+        user["edge_follow"] = {"count": raw.get("following_count")}
+        user["edge_owner_to_timeline_media"] = {"count": raw.get("media_count")}
+        user["is_business_account"] = raw.get("is_business")
+        user["category_name"] = raw.get("category_name") or raw.get("business_category_name") or raw.get("category")
+        return user, None
 
     def _fetch_via_keyapi(self):
         """Returns (user_dict_or_None, error_reason_or_None) - unlike a bare
@@ -91,19 +132,22 @@ class InstagramScanner:
         console.module_header("INSTAGRAM")
 
         reasons = []
-        user = None
-        if KEYAPI_KEY:
-            user, reason = self._fetch_via_keyapi()
-        else:
-            reason = "KEYAPI_KEY not configured"
+        user, reason = self._fetch_via_instagrapi()
         if reason:
             reasons.append(reason)
 
         if not user:
-            # Keep the keyapi.ai failure reason above even if the direct
-            # fallback also fails - the more informative one (e.g. an auth
-            # error on the primary path) shouldn't get masked by a generic
-            # fallback failure.
+            if KEYAPI_KEY:
+                user, reason = self._fetch_via_keyapi()
+            else:
+                reason = "KEYAPI_KEY not configured"
+            if reason:
+                reasons.append(reason)
+
+        if not user:
+            # Keep the earlier failure reasons even if this last fallback
+            # also fails - the more informative ones (e.g. an auth error on
+            # the primary path) shouldn't get masked by a generic failure.
             user, direct_reason = self._fetch_direct()
             if direct_reason:
                 reasons.append(direct_reason)
