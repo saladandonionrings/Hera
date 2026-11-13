@@ -1,8 +1,9 @@
 import subprocess
 import requests
 import re
+from urllib.parse import quote
 from core.display import console
-from core.config import PROTON_DOMAINS 
+from core.config import PROTON_DOMAINS
 
 def clean_ansi(text):
     return re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])').sub('', text)
@@ -75,6 +76,25 @@ class EmailSocialScanner:
         except: pass
         return False
 
+    def check_openpgp(self):
+        """keys.openpgp.org (the standard verifying PGP keyserver) returns
+        an HTML page with a specific "no key found" error message when the
+        email has no published key - its absence (on a 200 response) means
+        a key exists for this address."""
+        url = f"https://keys.openpgp.org/search?q={quote(self.target)}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "fr-FR,fr;q=0.9",
+        }
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200 and "Aucune clé" not in res.text:
+                print(f"  ✓  keys.openpgp.org         PGP Key Found")
+                return True
+        except: pass
+        return False
+
     def scan(self, render_header=True):
         if render_header:
             console.module_header("EMAIL TO SOCIAL MEDIA")
@@ -87,6 +107,8 @@ class EmailSocialScanner:
         if self.check_dealabs():
             found = True
         if self.check_notion():
+            found = True
+        if self.check_openpgp():
             found = True
 
         try:
