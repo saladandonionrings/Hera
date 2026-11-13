@@ -13,6 +13,7 @@ from .youtube import YouTubeScanner
 from .wordpress import WordPressEmailScanner
 from .steam import SteamScanner
 from .facebook import FacebookScanner
+from .facebook_gql import FacebookGqlScanner
 from.leboncoin import LeboncoinScanner
 from .ea import EAScanner
 from .nexon import NexonScanner

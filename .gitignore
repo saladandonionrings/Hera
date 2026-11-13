@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 __pycache__
 instagram_session.json
+facebook_cookies.json
+facebook_state.json

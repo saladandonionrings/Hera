@@ -24,6 +24,7 @@ from modules import (
     EmailSocialScanner,
     SnapchatScanner,
     InstagramScanner,
+    FacebookGqlScanner,
     SoundCloudScanner,
     YouTubeScanner,
     TikTokScanner,
@@ -210,6 +211,7 @@ class EpeiosPro:
                 has_github = BlackbirdScanner(self.target).scan()
                 SnapchatScanner(self.target).scan()
                 InstagramScanner(self.target).scan()
+                FacebookGqlScanner(self.target).scan()
                 SoundCloudScanner(self.target).scan()
                 YouTubeScanner(self.target).scan()
                 TikTokScanner(self.target).scan()

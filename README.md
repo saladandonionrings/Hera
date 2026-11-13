@@ -18,7 +18,7 @@
 
 | Category | Services / Tools |
 | :--- | :--- |
-| **identity/email** | Google Account (via [GHunt](https://github.com/mxrch/ghunt)), ProtonMail, Gravatar, WordPress |
+| **identity/email** | Google Account (via [GHunt](https://github.com/mxrch/ghunt)), ProtonMail, Gravatar, WordPress, Facebook (account-search via email, deep profile lookup via [facebook-gql-scraper](https://github.com/XD-MHLOO/facebook-gql-scraper)) |
 | **phone** | Number validation, country/carrier/line-type lookup, WhatsApp & Telegram registration check |
 | **dev platforms** | GitHub, GitLab, Bitbucket, npm, Docker Hub, HackerNews |
 | **socials** | Snapchat, Facebook, multi-site username sweep (~40 sites via `blackbird`), [holehe](https://github.com/megadose/holehe) |
@@ -45,6 +45,7 @@ pip3 install -r requirements.txt
 | `FACEBOOK_LSD_TOKEN` / `ESPN_API_KEY` | Override the built-in defaults if the platforms rotate them | no |
 | `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` | Your own Telegram API app : create one at [my.telegram.org/apps](https://my.telegram.org/apps) | no** |
 | `INSTAGRAM_USERNAME` / `INSTAGRAM_PASSWORD` | A throwaway Instagram account used for authenticated profile lookups (via [instagrapi](https://github.com/subzeroid/instagrapi)) - far less likely to get rate-limited than anonymous requests. Log in from the app's credentials drawer, which saves these and the resulting session automatically. **Don't use your main account** - automated logins can get it challenged or banned. | no |
+| `FACEBOOK_COOKIES_FILE` | Path to a `facebook_cookies.json` exported (e.g. via the [Cookie-Editor](https://addons.mozilla.org/en-US/firefox/addon/cookie-editor/) extension) from a real, logged-in Facebook session - powers deep profile lookups (bio, hometown, work/education, followers...) via [facebook-gql-scraper](https://github.com/XD-MHLOO/facebook-gql-scraper). Defaults to `facebook_cookies.json` in the project root. **Don't use your main account** - same risk as the Instagram credentials above. | no |
 
 \* without the Google OAuth variables, identity lookup via GHunt **still works**; only the profile-photo fetch is skipped.
 
