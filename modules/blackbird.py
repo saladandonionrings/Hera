@@ -65,6 +65,56 @@ class BlackbirdScanner:
 
         return True, meta
 
+    def check_twitter_twexapi(self):
+        """X/Twitter existence via twexapi.io's free twitter-viewer endpoint
+        - no API key required, and returns richer profile data (bio,
+        location, join date, follower/following/post counts) than
+        keyapi.ai's screenname endpoint, so it's tried first; keyapi.ai and
+        the nitter mirrors remain as fallbacks if twexapi.io itself is
+        unreachable or rate-limited."""
+        try:
+            res = requests.get(
+                "https://twexapi.io/api/tools/twitter-viewer",
+                params={"username": self.username},
+                headers={
+                    "accept": "*/*",
+                    "referer": "https://twexapi.io/twitter-viewer",
+                    "user-agent": self.headers["User-Agent"],
+                },
+                timeout=10,
+            )
+            if res.status_code != 200:
+                return False, {}
+            profile = (res.json().get("profile") or {})
+            if not profile.get("username"):
+                return False, {}
+        except Exception:
+            return False, {}
+
+        meta = {}
+        if profile.get("avatarUrl"):
+            meta["avatar"] = profile["avatarUrl"]
+        if profile.get("name"):
+            meta["name"] = profile["name"]
+        if profile.get("description"):
+            meta["bio"] = profile["description"]
+        if profile.get("location"):
+            meta["location"] = profile["location"]
+        if profile.get("createdAt"):
+            meta["joined"] = profile["createdAt"]
+
+        stats = []
+        if profile.get("followers") is not None:
+            stats.append(f"{profile['followers']} followers")
+        if profile.get("following") is not None:
+            stats.append(f"{profile['following']} following")
+        if profile.get("posts") is not None:
+            stats.append(f"{profile['posts']} posts")
+        if stats:
+            meta["stats"] = " / ".join(stats)
+
+        return True, meta
+
     def check_twitter_keyapi(self):
         """X/Twitter existence via keyapi.ai's screenname endpoint, which
         returns the live profile record (avatar, name, bio, follower/
@@ -333,11 +383,13 @@ class BlackbirdScanner:
                     continue
 
                 if check_type == "x_check":
-                    is_found, meta = self.check_twitter_keyapi() if KEYAPI_KEY else (False, {})
+                    is_found, meta = self.check_twitter_twexapi()
+                    if not is_found and KEYAPI_KEY:
+                        is_found, meta = self.check_twitter_keyapi()
                     if not is_found:
-                        # Same as Pinterest above - fall back regardless of
-                        # whether keyapi.ai failed because no key is set or
-                        # because the call itself errored out.
+                        # Both twexapi.io and keyapi.ai (if configured)
+                        # failed - fall back to scraping nitter mirrors
+                        # directly, regardless of why the API tiers failed.
                         instances = [f"https://nitter.net/{self.username}", f"https://nitter.cz/{self.username}", f"https://nitter.it/{self.username}"]
                         for instance_url in instances:
                             try:
