@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from core.display import console
 from core.scrape import extract_profile_meta, print_profile_meta
@@ -273,6 +274,7 @@ class BlackbirdScanner:
 
             # --- profiles,links ---
             ("Linktree", f"https://linktr.ee/{self.username}", "status", 200),
+            ("NGL", f"https://ngl.link/{self.username}", "ngl_check", None),
             ("BuyMeACoffee", f"https://www.buymeacoffee.com/{self.username}", "text_not_present", "couldn't find that page"),
             ("Patreon", f"https://www.patreon.com/{self.username}", "status", 200),
             ("Gravatar", f"http://en.gravatar.com/{self.username}.json", "text_present", '"profileUrl"'),
@@ -430,6 +432,8 @@ class BlackbirdScanner:
                     if res.status_code == 200 and "/errors/" not in res.url and "Learn a language for free" not in res.text: is_found = True
                 elif check_type == "dailymotion_check":
                     if res.status_code == 200 and "not_found" not in res.text and "Not found" not in res.text: is_found = True
+                elif check_type == "ngl_check":
+                    if res.status_code == 200 and "Could not find user" not in res.text: is_found = True
 
                 if is_found:
                     final_url = url
@@ -448,6 +452,21 @@ class BlackbirdScanner:
                             }
                         except Exception:
                             meta = {}
+                    elif site == "NGL":
+                        # NGL's og:title/og:description are the same generic
+                        # "Anonymous messages!" blurb on every profile, so the
+                        # linked Instagram handle and message count are pulled
+                        # out of the page's inline JS instead.
+                        meta = {}
+                        ig_username_match = re.search(r'var ig_username = "([^"]*)"', res.text)
+                        ig_pfp_match = re.search(r'var ig_pfp_url = "([^"]*)"', res.text)
+                        click_match = re.search(r'clickCount">(\d+)<', res.text)
+                        if ig_pfp_match and ig_pfp_match.group(1):
+                            meta["avatar"] = ig_pfp_match.group(1)
+                        if ig_username_match and ig_username_match.group(1):
+                            meta["name"] = f"Instagram: @{ig_username_match.group(1)}"
+                        if click_match:
+                            meta["stats"] = f"{click_match.group(1)} messages sent"
                     else:
                         meta = extract_profile_meta(res.text)
 
